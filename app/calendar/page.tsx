@@ -53,6 +53,8 @@ export default function Home() {
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
   const [isEditingEvent, setIsEditingEvent] = useState(false);
   const [showEventMenu, setShowEventMenu] = useState(false);
+  const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+  const [isProcessingCheckout, setIsProcessingCheckout] = useState(false);
 
   // Drag and drop state
   const [draggedEvent, setDraggedEvent] = useState<Event | null>(null);
@@ -102,6 +104,44 @@ export default function Home() {
   ];
 
   const repeatOptions = ['Does not repeat', 'Daily', 'Weekly', 'Monthly', 'Yearly'];
+
+  // Handle Stripe checkout
+  const handleUpgrade = async (tier: 'basic' | 'premium') => {
+    setIsProcessingCheckout(true);
+    try {
+      // Get the price ID from your Stripe config
+      const priceIds = {
+        basic: 'price_basic', // Replace with your actual Stripe price ID
+        premium: 'price_premium', // Replace with your actual Stripe price ID
+      };
+
+      const response = await fetch('/api/create-checkout-session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          priceId: priceIds[tier],
+          tier: tier,
+        }),
+      });
+
+      const { url, error } = await response.json();
+
+      if (error) {
+        alert('Failed to create checkout session. Please try again.');
+        return;
+      }
+
+      // Redirect to Stripe Checkout
+      if (url) {
+        window.location.href = url;
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      alert('Failed to start checkout. Please try again.');
+    } finally {
+      setIsProcessingCheckout(false);
+    }
+  };
 
   // Helper function: Convert Date + time string to ISO timestamp
   const convertToTimestamp = (date: Date, timeStr: string): string => {
@@ -950,10 +990,10 @@ export default function Home() {
       {/* Bottom Navigation */}
       <nav className="flex items-center justify-around border-t border-gray-800 pb-safe bg-black">
         <button
-          onClick={() => setActiveTab('home')}
+          onClick={() => setShowUpgradeModal(true)}
           className="flex flex-col items-center py-3 px-6 transition-colors"
         >
-          <svg className={`w-6 h-6 ${activeTab === 'home' ? 'text-white' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
           </svg>
         </button>
@@ -970,28 +1010,28 @@ export default function Home() {
         </button>
 
         <button
-          onClick={() => setActiveTab('profile')}
+          onClick={() => setShowUpgradeModal(true)}
           className="flex flex-col items-center py-3 px-6 transition-colors"
         >
-          <svg className={`w-6 h-6 ${activeTab === 'profile' ? 'text-white' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
           </svg>
         </button>
 
         <button
-          onClick={() => setActiveTab('location')}
+          onClick={() => setShowUpgradeModal(true)}
           className="flex flex-col items-center py-3 px-6 transition-colors"
         >
-          <svg className={`w-6 h-6 ${activeTab === 'location' ? 'text-white' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
           </svg>
         </button>
 
         <button
-          onClick={() => setActiveTab('sync')}
+          onClick={() => setShowUpgradeModal(true)}
           className="flex flex-col items-center py-3 px-6 transition-colors"
         >
-          <svg className={`w-6 h-6 ${activeTab === 'sync' ? 'text-white' : 'text-gray-500'}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg className="w-6 h-6 text-gray-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
           </svg>
         </button>
@@ -1648,6 +1688,151 @@ export default function Home() {
           >
             Undo
           </button>
+        </div>
+      )}
+
+      {/* Upgrade Modal */}
+      {showUpgradeModal && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
+          onClick={() => setShowUpgradeModal(false)}
+        >
+          <div
+            className="bg-gray-900 rounded-3xl p-6 mx-4 max-w-lg w-full border border-gray-700"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-2xl font-normal">Upgrade to Pro</h2>
+              <button
+                onClick={() => setShowUpgradeModal(false)}
+                className="p-2 hover:bg-gray-800 rounded-full transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            {/* Demo Notice */}
+            <div className="bg-pink-900 bg-opacity-30 border border-pink-600 rounded-2xl p-4 mb-6">
+              <div className="flex items-start gap-3">
+                <svg className="w-6 h-6 text-pink-400 flex-shrink-0 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                  <h3 className="font-medium text-pink-300 mb-1">Demo Version</h3>
+                  <p className="text-sm text-gray-300 leading-relaxed">
+                    This is currently a demo version of the app. By upgrading, you're investing in future features and supporting continued development. Premium features will be unlocked as we build them!
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Pricing Options */}
+            <div className="space-y-4 mb-6">
+              {/* Basic Plan */}
+              <button
+                onClick={() => handleUpgrade('basic')}
+                disabled={isProcessingCheckout}
+                className="w-full bg-gray-800 hover:bg-gray-700 border-2 border-gray-600 hover:border-pink-500 rounded-2xl p-5 transition-all text-left disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h3 className="text-xl font-medium">Basic Plan</h3>
+                    <p className="text-3xl font-light mt-1">$9.99<span className="text-lg text-gray-400">/mo</span></p>
+                  </div>
+                  <div className="bg-pink-600 text-white px-4 py-2 rounded-full text-sm font-medium">
+                    Popular
+                  </div>
+                </div>
+                <ul className="space-y-2 text-sm text-gray-300">
+                  <li className="flex items-center gap-2">
+                    <svg className="w-5 h-5 text-pink-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Unlimited calendar events</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <svg className="w-5 h-5 text-pink-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Basic sync (coming soon)</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <svg className="w-5 h-5 text-pink-400 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Email support</span>
+                  </li>
+                </ul>
+              </button>
+
+              {/* Premium Plan */}
+              <button
+                onClick={() => handleUpgrade('premium')}
+                disabled={isProcessingCheckout}
+                className="w-full bg-gradient-to-br from-pink-900 to-purple-900 hover:from-pink-800 hover:to-purple-800 border-2 border-pink-500 rounded-2xl p-5 transition-all text-left disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <div className="flex items-center justify-between mb-3">
+                  <div>
+                    <h3 className="text-xl font-medium">Premium Plan</h3>
+                    <p className="text-3xl font-light mt-1">$19.99<span className="text-lg text-gray-400">/mo</span></p>
+                  </div>
+                  <div className="bg-white text-pink-900 px-4 py-2 rounded-full text-sm font-bold">
+                    Best Value
+                  </div>
+                </div>
+                <ul className="space-y-2 text-sm text-gray-300">
+                  <li className="flex items-center gap-2">
+                    <svg className="w-5 h-5 text-pink-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Everything in Basic</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <svg className="w-5 h-5 text-pink-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Advanced sync (coming soon)</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <svg className="w-5 h-5 text-pink-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Priority support</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <svg className="w-5 h-5 text-pink-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Custom event types (coming soon)</span>
+                  </li>
+                  <li className="flex items-center gap-2">
+                    <svg className="w-5 h-5 text-pink-300 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>Analytics (coming soon)</span>
+                  </li>
+                </ul>
+              </button>
+            </div>
+
+            {/* Processing indicator */}
+            {isProcessingCheckout && (
+              <div className="text-center py-2 text-pink-400">
+                <p className="text-sm">Redirecting to checkout...</p>
+              </div>
+            )}
+
+            {/* Cancel Button */}
+            <button
+              onClick={() => setShowUpgradeModal(false)}
+              className="w-full py-3 text-gray-400 hover:text-white transition-colors text-center"
+            >
+              Maybe Later
+            </button>
+          </div>
         </div>
       )}
     </div>
