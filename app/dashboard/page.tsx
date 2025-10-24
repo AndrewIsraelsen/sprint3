@@ -26,7 +26,15 @@ export default async function DashboardPage() {
       <nav className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16 items-center">
-            <h1 className="text-xl font-bold">Dashboard</h1>
+            <div className="flex items-center gap-6">
+              <h1 className="text-xl font-bold">Dashboard</h1>
+              <Link href="/calendar" className="text-indigo-600 hover:text-indigo-700 font-medium">
+                Calendar
+              </Link>
+              <Link href="/pricing" className="text-indigo-600 hover:text-indigo-700 font-medium">
+                Pricing
+              </Link>
+            </div>
             <LogoutButton />
           </div>
         </div>
