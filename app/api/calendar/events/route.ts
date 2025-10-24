@@ -57,7 +57,17 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { title, description, start_time, end_time, location } = body
+    const {
+      title,
+      notes,
+      start_time,
+      end_time,
+      address,
+      event_type,
+      color,
+      repeat_pattern,
+      has_backup
+    } = body
 
     if (!title || !start_time || !end_time) {
       return NextResponse.json(
@@ -72,10 +82,15 @@ export async function POST(request: NextRequest) {
         {
           user_id: user.id,
           title,
-          description,
+          description: notes || '',
+          notes,
           start_time,
           end_time,
-          location,
+          address,
+          event_type,
+          color,
+          repeat_pattern: repeat_pattern || 'Does not repeat',
+          has_backup: has_backup || false,
         },
       ])
       .select()

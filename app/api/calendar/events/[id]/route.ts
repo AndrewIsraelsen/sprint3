@@ -56,13 +56,18 @@ export async function PATCH(
     const body = await request.json()
 
     // Only allow updating specific fields
-    const allowedFields = ['title', 'description', 'start_time', 'end_time', 'location']
+    const allowedFields = ['title', 'description', 'notes', 'start_time', 'end_time', 'address', 'event_type', 'color', 'repeat_pattern', 'has_backup']
     const updates: Record<string, any> = {}
 
     for (const field of allowedFields) {
       if (field in body) {
         updates[field] = body[field]
       }
+    }
+
+    // Sync description with notes for backward compatibility
+    if ('notes' in body) {
+      updates.description = body.notes
     }
 
     if (Object.keys(updates).length === 0) {

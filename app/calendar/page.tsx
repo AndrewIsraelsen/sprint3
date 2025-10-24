@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 type Event = {
   id: string;
@@ -102,6 +102,76 @@ export default function Home() {
   ];
 
   const repeatOptions = ['Does not repeat', 'Daily', 'Weekly', 'Monthly', 'Yearly'];
+
+  // Helper function: Convert Date + time string to ISO timestamp
+  const convertToTimestamp = (date: Date, timeStr: string): string => {
+    const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+    if (!match) return new Date().toISOString();
+
+    let hour = parseInt(match[1]);
+    const minutes = parseInt(match[2]);
+    const period = match[3].toUpperCase();
+
+    if (period === 'PM' && hour !== 12) hour += 12;
+    else if (period === 'AM' && hour === 12) hour = 0;
+
+    const timestamp = new Date(date);
+    timestamp.setHours(hour, minutes, 0, 0);
+    return timestamp.toISOString();
+  };
+
+  // Helper function: Convert ISO timestamp to Date and time string
+  const convertFromTimestamp = (isoString: string): { date: Date; timeStr: string } => {
+    const d = new Date(isoString);
+    const hours = d.getHours();
+    const minutes = d.getMinutes();
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const displayHour = hours === 0 ? 12 : hours > 12 ? hours - 12 : hours;
+    const timeStr = `${displayHour}:${minutes.toString().padStart(2, '0')} ${period}`;
+    return { date: d, timeStr };
+  };
+
+  // Load events from Supabase on mount
+  useEffect(() => {
+    const loadEvents = async () => {
+      try {
+        const response = await fetch('/api/calendar/events');
+        if (!response.ok) return;
+
+        const { events: apiEvents } = await response.json();
+
+        // Convert API events to frontend Event format
+        const convertedEvents: Event[] = apiEvents.map((e: any) => {
+          const { date: startDate, timeStr: startTime } = convertFromTimestamp(e.start_time);
+          const { timeStr: endTime } = convertFromTimestamp(e.end_time);
+
+          return {
+            id: e.id,
+            type: e.event_type || 'Other',
+            color: e.color || 'bg-gray-400',
+            time: parseTimeToHour(startTime),
+            duration: calculateEventDuration(startTime, endTime),
+            title: e.title,
+            notes: e.notes || '',
+            date: startDate,
+            startTime,
+            endTime,
+            repeat: e.repeat_pattern || 'Does not repeat',
+            backup: e.has_backup || false,
+            address: e.address || '',
+            createdAt: new Date(e.created_at),
+            updatedAt: new Date(e.updated_at),
+          };
+        });
+
+        setEvents(convertedEvents);
+      } catch (error) {
+        console.error('Failed to load events:', error);
+      }
+    };
+
+    loadEvents();
+  }, []);
 
   const handlePlusButtonClick = () => {
     const otherEventType = eventTypes.find(t => t.name === 'Other');
@@ -216,54 +286,102 @@ export default function Home() {
     return minutes / 60; // Return fraction of hour for positioning
   };
 
-  const handleSaveEvent = () => {
+  const handleSaveEvent = async () => {
     const startHour = parseTimeToHour(eventFormData.startTime);
     const duration = calculateEventDuration(eventFormData.startTime, eventFormData.endTime);
     const now = new Date();
 
-    if (isEditingEvent && selectedEvent) {
-      // Update existing event
-      const updatedEvents = events.map(evt =>
-        evt.id === selectedEvent.id
-          ? {
-              ...evt,
-              type: eventFormData.type,
-              color: eventFormData.color,
-              title: eventFormData.title || eventFormData.type,
-              notes: eventFormData.notes,
-              date: eventFormData.date,
-              startTime: eventFormData.startTime,
-              endTime: eventFormData.endTime,
-              time: startHour,
-              duration: duration,
-              repeat: eventFormData.repeat,
-              backup: eventFormData.backup,
-              address: eventFormData.address,
-              updatedAt: now
-            }
-          : evt
-      );
-      setEvents(updatedEvents);
-    } else {
-      // Create new event
-      const newEvent: Event = {
-        id: Date.now().toString(),
-        type: eventFormData.type,
-        color: eventFormData.color,
-        time: startHour,
-        duration: duration,
-        title: eventFormData.title || eventFormData.type,
-        notes: eventFormData.notes,
-        date: eventFormData.date,
-        startTime: eventFormData.startTime,
-        endTime: eventFormData.endTime,
-        repeat: eventFormData.repeat,
-        backup: eventFormData.backup,
-        address: eventFormData.address,
-        createdAt: now,
-        updatedAt: now
-      };
-      setEvents([...events, newEvent]);
+    const startTimestamp = convertToTimestamp(eventFormData.date, eventFormData.startTime);
+    const endTimestamp = convertToTimestamp(eventFormData.date, eventFormData.endTime);
+
+    try {
+      if (isEditingEvent && selectedEvent) {
+        // Update existing event via API
+        const response = await fetch(`/api/calendar/events/${selectedEvent.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: eventFormData.title || eventFormData.type,
+            notes: eventFormData.notes,
+            start_time: startTimestamp,
+            end_time: endTimestamp,
+            address: eventFormData.address,
+            event_type: eventFormData.type,
+            color: eventFormData.color,
+            repeat_pattern: eventFormData.repeat,
+            has_backup: eventFormData.backup,
+          }),
+        });
+
+        if (response.ok) {
+          const { event: updatedEvent } = await response.json();
+          // Update local state
+          const updatedEvents = events.map(evt =>
+            evt.id === selectedEvent.id
+              ? {
+                  ...evt,
+                  type: eventFormData.type,
+                  color: eventFormData.color,
+                  title: eventFormData.title || eventFormData.type,
+                  notes: eventFormData.notes,
+                  date: eventFormData.date,
+                  startTime: eventFormData.startTime,
+                  endTime: eventFormData.endTime,
+                  time: startHour,
+                  duration: duration,
+                  repeat: eventFormData.repeat,
+                  backup: eventFormData.backup,
+                  address: eventFormData.address,
+                  updatedAt: new Date(updatedEvent.updated_at)
+                }
+              : evt
+          );
+          setEvents(updatedEvents);
+        }
+      } else {
+        // Create new event via API
+        const response = await fetch('/api/calendar/events', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title: eventFormData.title || eventFormData.type,
+            notes: eventFormData.notes,
+            start_time: startTimestamp,
+            end_time: endTimestamp,
+            address: eventFormData.address,
+            event_type: eventFormData.type,
+            color: eventFormData.color,
+            repeat_pattern: eventFormData.repeat,
+            has_backup: eventFormData.backup,
+          }),
+        });
+
+        if (response.ok) {
+          const { event: createdEvent } = await response.json();
+          const newEvent: Event = {
+            id: createdEvent.id,
+            type: eventFormData.type,
+            color: eventFormData.color,
+            time: startHour,
+            duration: duration,
+            title: eventFormData.title || eventFormData.type,
+            notes: eventFormData.notes,
+            date: eventFormData.date,
+            startTime: eventFormData.startTime,
+            endTime: eventFormData.endTime,
+            repeat: eventFormData.repeat,
+            backup: eventFormData.backup,
+            address: eventFormData.address,
+            createdAt: new Date(createdEvent.created_at),
+            updatedAt: new Date(createdEvent.updated_at)
+          };
+          setEvents([...events, newEvent]);
+        }
+      }
+    } catch (error) {
+      console.error('Failed to save event:', error);
+      alert('Failed to save event. Please try again.');
+      return;
     }
 
     setShowEventDetailsForm(false);
@@ -319,11 +437,25 @@ export default function Home() {
     setShowEventSummary(false);
   };
 
-  const handleDeleteEvent = () => {
+  const handleDeleteEvent = async () => {
     if (!selectedEvent) return;
 
-    const updatedEvents = events.filter(evt => evt.id !== selectedEvent.id);
-    setEvents(updatedEvents);
+    try {
+      const response = await fetch(`/api/calendar/events/${selectedEvent.id}`, {
+        method: 'DELETE',
+      });
+
+      if (response.ok) {
+        const updatedEvents = events.filter(evt => evt.id !== selectedEvent.id);
+        setEvents(updatedEvents);
+      } else {
+        alert('Failed to delete event. Please try again.');
+      }
+    } catch (error) {
+      console.error('Failed to delete event:', error);
+      alert('Failed to delete event. Please try again.');
+    }
+
     setShowEventMenu(false);
     setShowEventSummary(false);
     setSelectedEvent(null);
@@ -391,7 +523,7 @@ export default function Home() {
     }
   };
 
-  const handleEventDragEnd = (e: React.MouseEvent | React.TouchEvent) => {
+  const handleEventDragEnd = async (e: React.MouseEvent | React.TouchEvent) => {
     if (!isDragging || !draggedEvent) return;
 
     const clientY = 'touches' in e ? e.changedTouches[0].clientY : e.clientY;
@@ -415,6 +547,23 @@ export default function Home() {
     const endHour = Math.floor(endTotalMinutes / 60);
     const endMinutes = endTotalMinutes % 60;
     const newEndTime = formatTimeFromHour(endHour, endMinutes);
+
+    // Save to API
+    const startTimestamp = convertToTimestamp(selectedDate, newStartTime);
+    const endTimestamp = convertToTimestamp(selectedDate, newEndTime);
+
+    try {
+      await fetch(`/api/calendar/events/${draggedEvent.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          start_time: startTimestamp,
+          end_time: endTimestamp,
+        }),
+      });
+    } catch (error) {
+      console.error('Failed to update event:', error);
+    }
 
     // Update the event
     const updatedEvents = events.map(evt =>
