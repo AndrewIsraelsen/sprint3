@@ -111,8 +111,8 @@ export default function Home() {
     try {
       // Get the price ID from your Stripe config
       const priceIds = {
-        basic: 'price_basic', // Replace with your actual Stripe price ID
-        premium: 'price_premium', // Replace with your actual Stripe price ID
+        basic: 'price_1SM0BhJwLJFduW01Rz2WkbfD',
+        premium: 'price_1SM0BhJwLJFduW01Sau5RPKC',
       };
 
       const response = await fetch('/api/create-checkout-session', {

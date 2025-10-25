@@ -9,7 +9,7 @@ export const STRIPE_PLANS = {
   basic: {
     name: 'Basic Plan',
     price: 999, // $9.99 in cents
-    priceId: 'price_basic', // Replace with your actual Stripe Price ID
+    priceId: 'price_1SM0BhJwLJFduW01Rz2WkbfD',
     features: [
       'Unlimited calendar events',
       'Basic sync',
@@ -19,7 +19,7 @@ export const STRIPE_PLANS = {
   premium: {
     name: 'Premium Plan',
     price: 1999, // $19.99 in cents
-    priceId: 'price_premium', // Replace with your actual Stripe Price ID
+    priceId: 'price_1SM0BhJwLJFduW01Sau5RPKC',
     features: [
       'Everything in Basic',
       'Advanced sync',
