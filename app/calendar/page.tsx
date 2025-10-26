@@ -27,20 +27,19 @@ type EventType = {
 
 type Indicator = {
   id: string;
-  label: string;
-  numerator: number;
-  denominator: number;
+  event_type: string;
+  goal_hours: number;
+  actual_hours: number;
+  display_order: number;
+  color: string;
 };
 
 export default function Home() {
   const [activeTab, setActiveTab] = useState('home');
   const [selectedDate, setSelectedDate] = useState(new Date(2026, 3, 2)); // April 2, 2026
-  const [indicators, setIndicators] = useState<Indicator[]>([
-    { id: '1', label: 'Gospel Study', numerator: 5, denominator: 7 },
-    { id: '2', label: 'Workout', numerator: 4, denominator: 7 },
-    { id: '3', label: 'Work', numerator: 20, denominator: 40 },
-    { id: '4', label: 'School', numerator: 15, denominator: 20 },
-  ]);
+  const [indicators, setIndicators] = useState<Indicator[]>([]);
+  const [isEditingIndicators, setIsEditingIndicators] = useState(false);
+  const [showAddIndicatorModal, setShowAddIndicatorModal] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [pickerMonth, setPickerMonth] = useState(3); // April (0-indexed)
   const [pickerYear, setPickerYear] = useState(2026);
@@ -165,6 +164,70 @@ export default function Home() {
     const timeStr = `${displayHour}:${minutes.toString().padStart(2, '0')} ${period}`;
     return { date: d, timeStr };
   };
+
+  // Helper function: Get Monday of the current week
+  const getWeekStart = (date: Date): Date => {
+    const d = new Date(date);
+    const day = d.getDay();
+    const diff = d.getDate() - day + (day === 0 ? -6 : 1); // Adjust when day is Sunday
+    return new Date(d.setDate(diff));
+  };
+
+  // Helper function: Get Sunday of the current week
+  const getWeekEnd = (date: Date): Date => {
+    const start = getWeekStart(date);
+    const end = new Date(start);
+    end.setDate(start.getDate() + 6);
+    return end;
+  };
+
+  // Calculate weekly hours for each event type
+  const calculateWeeklyHours = (eventType: string, weekStart: Date, weekEnd: Date): number => {
+    const weekEvents = events.filter(event => {
+      const eventDate = new Date(event.date);
+      return event.type === eventType &&
+             eventDate >= weekStart &&
+             eventDate <= weekEnd;
+    });
+
+    return weekEvents.reduce((total, event) => total + event.duration, 0);
+  };
+
+  // Load indicators from Supabase
+  useEffect(() => {
+    const loadIndicators = async () => {
+      try {
+        const response = await fetch('/api/key-indicators');
+        if (!response.ok) return;
+
+        const { indicators: apiIndicators } = await response.json();
+
+        // Calculate actual hours for each indicator
+        const weekStart = getWeekStart(new Date());
+        const weekEnd = getWeekEnd(new Date());
+
+        const indicatorsWithHours: Indicator[] = apiIndicators.map((ind: any) => {
+          const eventType = eventTypes.find(et => et.name === ind.event_type);
+          return {
+            id: ind.id,
+            event_type: ind.event_type,
+            goal_hours: ind.goal_hours,
+            actual_hours: calculateWeeklyHours(ind.event_type, weekStart, weekEnd),
+            display_order: ind.display_order,
+            color: eventType?.color || 'bg-gray-500'
+          };
+        });
+
+        setIndicators(indicatorsWithHours);
+      } catch (error) {
+        console.error('Failed to load indicators:', error);
+      }
+    };
+
+    if (events.length > 0) {
+      loadIndicators();
+    }
+  }, [events]);
 
   // Load events from Supabase on mount
   useEffect(() => {
@@ -771,34 +834,91 @@ export default function Home() {
           <div className="mb-4">
             <div className="flex items-center justify-between">
               <h2 className="text-lg font-medium text-white">Weekly Key Indicators</h2>
-              <button className="text-pink-500 text-sm font-medium">View all</button>
+              {indicators.length > 0 && (
+                <button
+                  onClick={() => setIsEditingIndicators(!isEditingIndicators)}
+                  className="text-pink-500 text-sm font-medium"
+                >
+                  {isEditingIndicators ? 'Done' : 'Edit'}
+                </button>
+              )}
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            {indicators.map((indicator) => (
-              <div
-                key={indicator.id}
-                className="bg-gray-900 border border-gray-700 rounded-xl p-3"
-              >
-                <div className="flex items-start gap-2">
-                  <div className="flex-shrink-0">
-                    <svg className="w-8 h-8 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-                    </svg>
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="text-xs text-gray-400 mb-1 truncate">
-                      {indicator.label}
-                    </div>
-                    <div className="text-2xl font-medium text-pink-500">
-                      {indicator.numerator}/{indicator.denominator}
-                    </div>
-                  </div>
-                </div>
+          {indicators.length === 0 ? (
+            <div className="flex flex-col items-center justify-center py-16">
+              <div className="text-gray-400 text-center mb-6">
+                <svg className="w-16 h-16 mx-auto mb-4 text-gray-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                </svg>
+                <p className="text-base">No key indicators yet</p>
+                <p className="text-sm mt-1">Track your weekly goals by adding indicators</p>
               </div>
-            ))}
-          </div>
+              <button
+                onClick={() => setShowAddIndicatorModal(true)}
+                className="bg-pink-600 text-white px-6 py-3 rounded-lg font-medium hover:bg-pink-700 transition-colors"
+              >
+                Add Indicator
+              </button>
+            </div>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-3">
+                {indicators.map((indicator) => (
+                  <div
+                    key={indicator.id}
+                    className="bg-gray-900 border border-gray-700 rounded-xl p-3 relative"
+                  >
+                    {isEditingIndicators && (
+                      <button
+                        onClick={async () => {
+                          await fetch(`/api/key-indicators/${indicator.id}`, { method: 'DELETE' });
+                          setIndicators(indicators.filter(i => i.id !== indicator.id));
+                        }}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600"
+                      >
+                        <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                      </button>
+                    )}
+                    <div className="flex items-start gap-2 mb-2">
+                      <div className="flex-shrink-0">
+                        <div className={`w-8 h-8 ${indicator.color} rounded-full`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="text-xs text-gray-400 mb-1 truncate">
+                          {indicator.event_type}
+                        </div>
+                        <div className="text-2xl font-medium text-white">
+                          {indicator.actual_hours.toFixed(1)}/{indicator.goal_hours}
+                        </div>
+                      </div>
+                    </div>
+                    {/* Progress Bar */}
+                    <div className="w-full bg-gray-700 rounded-full h-2">
+                      <div
+                        className={`${indicator.color} h-2 rounded-full transition-all duration-300`}
+                        style={{
+                          width: `${Math.min((indicator.actual_hours / indicator.goal_hours) * 100, 100)}%`
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              <button
+                onClick={() => setShowAddIndicatorModal(true)}
+                className="w-full mt-4 py-3 border-2 border-dashed border-gray-600 rounded-xl text-gray-400 hover:border-pink-500 hover:text-pink-500 transition-colors flex items-center justify-center gap-2"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+                </svg>
+                Add Indicator
+              </button>
+            </>
+          )}
         </div>
       )}
 
@@ -1612,6 +1732,82 @@ export default function Home() {
           >
             Undo
           </button>
+        </div>
+      )}
+
+      {/* Add Indicator Modal */}
+      {showAddIndicatorModal && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-90 z-50 flex items-center justify-center p-4"
+          onClick={() => setShowAddIndicatorModal(false)}
+        >
+          <div
+            className="bg-gray-900 rounded-2xl p-6 mx-4 max-w-md w-full"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-6">
+              <h2 className="text-xl font-normal text-white">Add Key Indicator</h2>
+              <button
+                onClick={() => setShowAddIndicatorModal(false)}
+                className="p-2 hover:bg-gray-800 rounded-full transition-colors"
+              >
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+
+            <p className="text-gray-400 text-sm mb-4">
+              Select an event type to track its weekly hours
+            </p>
+
+            <div className="space-y-2">
+              {eventTypes.map((eventType) => (
+                <button
+                  key={eventType.name}
+                  onClick={async () => {
+                    const response = await fetch('/api/key-indicators', {
+                      method: 'POST',
+                      headers: { 'Content-Type': 'application/json' },
+                      body: JSON.stringify({
+                        event_type: eventType.name,
+                        goal_hours: 1,
+                        display_order: indicators.length
+                      })
+                    });
+
+                    if (response.ok) {
+                      const { indicator } = await response.json();
+                      const weekStart = getWeekStart(new Date());
+                      const weekEnd = getWeekEnd(new Date());
+
+                      setIndicators([...indicators, {
+                        id: indicator.id,
+                        event_type: indicator.event_type,
+                        goal_hours: indicator.goal_hours,
+                        actual_hours: calculateWeeklyHours(indicator.event_type, weekStart, weekEnd),
+                        display_order: indicator.display_order,
+                        color: eventType.color
+                      }]);
+                    }
+
+                    setShowAddIndicatorModal(false);
+                  }}
+                  className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-800 rounded-lg transition-colors text-left"
+                >
+                  <div className={`w-8 h-8 ${eventType.color} rounded-full flex-shrink-0`} />
+                  <span className="text-white text-base">{eventType.name}</span>
+                </button>
+              ))}
+            </div>
+
+            <button
+              onClick={() => setShowAddIndicatorModal(false)}
+              className="w-full mt-6 py-3 text-gray-400 hover:text-white transition-colors"
+            >
+              Cancel
+            </button>
+          </div>
         </div>
       )}
 
