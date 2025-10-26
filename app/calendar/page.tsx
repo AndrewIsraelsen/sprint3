@@ -90,17 +90,13 @@ export default function Home() {
   });
 
   const eventTypes: EventType[] = [
-    { name: 'Relax', color: 'bg-green-400' },
-    { name: 'School (Study)', color: 'bg-yellow-400' },
-    { name: 'School (Class', color: 'bg-purple-300' },
-    { name: 'Gospel (Church)', color: 'bg-pink-400' },
-    { name: 'Gospel (Study)', color: 'bg-purple-500' },
-    { name: 'Gospel (Meeting)', color: 'bg-gray-300' },
-    { name: 'Work', color: 'bg-cyan-300' },
-    { name: 'Travel', color: 'bg-pink-300' },
-    { name: 'Meal', color: 'bg-orange-200' },
-    { name: 'Workout', color: 'bg-gray-400' },
-    { name: 'Other', color: 'bg-white' },
+    { name: 'Church', color: 'bg-red-500' },
+    { name: 'Family', color: 'bg-orange-500' },
+    { name: 'School', color: 'bg-green-500' },
+    { name: 'Work', color: 'bg-blue-500' },
+    { name: 'Travel', color: 'bg-purple-500' },
+    { name: 'Meal', color: 'bg-yellow-800' },
+    { name: 'Other', color: 'bg-gray-500' },
   ];
 
   const repeatOptions = ['Does not repeat', 'Daily', 'Weekly', 'Monthly', 'Yearly'];
