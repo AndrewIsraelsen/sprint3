@@ -41,7 +41,6 @@ export default function Home() {
     { id: '3', label: 'Work', numerator: 20, denominator: 40 },
     { id: '4', label: 'School', numerator: 15, denominator: 20 },
   ]);
-  const [isEditingIndicators, setIsEditingIndicators] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [pickerMonth, setPickerMonth] = useState(3); // April (0-indexed)
   const [pickerYear, setPickerYear] = useState(2026);
@@ -768,111 +767,38 @@ export default function Home() {
 
       {/* Home Screen */}
       {activeTab === 'home' && (
-        <div className="flex-1 overflow-y-auto p-6">
-          <div className="mb-6">
-            <h1 className="text-3xl font-normal mb-2">Weekly Key Indicators</h1>
-            <button
-              onClick={() => setIsEditingIndicators(!isEditingIndicators)}
-              className="text-pink-500 text-base hover:text-pink-400 transition-colors"
-            >
-              {isEditingIndicators ? 'Done' : 'Edit indicators'}
-            </button>
+        <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
+          <div className="mb-4">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-medium text-gray-900">Weekly Key Indicators</h2>
+              <button className="text-pink-600 text-sm font-medium">View all</button>
+            </div>
           </div>
 
-          {!isEditingIndicators ? (
-            <div className="grid grid-cols-2 gap-4">
-              {indicators.map((indicator) => (
-                <div
-                  key={indicator.id}
-                  className="bg-gray-900 border border-gray-700 rounded-2xl p-4 aspect-square flex flex-col items-center justify-center"
-                >
-                  <div className="text-5xl font-light mb-2">
-                    {indicator.numerator}/{indicator.denominator}
-                  </div>
-                  <div className="text-lg text-gray-300 text-center">
-                    {indicator.label}
-                  </div>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <div className="space-y-4">
-              {indicators.map((indicator, index) => (
-                <div
-                  key={indicator.id}
-                  className="bg-gray-900 border border-gray-700 rounded-2xl p-4"
-                >
-                  <div className="mb-3">
-                    <label className="text-gray-400 text-sm mb-2 block">Label</label>
-                    <input
-                      type="text"
-                      value={indicator.label}
-                      onChange={(e) => {
-                        const newIndicators = [...indicators];
-                        newIndicators[index].label = e.target.value;
-                        setIndicators(newIndicators);
-                      }}
-                      className="w-full bg-transparent border border-gray-600 rounded-lg px-4 py-2 text-lg focus:outline-none focus:border-pink-500"
-                    />
-                  </div>
-                  <div className="grid grid-cols-2 gap-4 mb-3">
-                    <div>
-                      <label className="text-gray-400 text-sm mb-2 block">Numerator</label>
-                      <input
-                        type="number"
-                        value={indicator.numerator}
-                        onChange={(e) => {
-                          const newIndicators = [...indicators];
-                          newIndicators[index].numerator = parseInt(e.target.value) || 0;
-                          setIndicators(newIndicators);
-                        }}
-                        className="w-full bg-transparent border border-gray-600 rounded-lg px-4 py-2 text-lg focus:outline-none focus:border-pink-500"
-                      />
-                    </div>
-                    <div>
-                      <label className="text-gray-400 text-sm mb-2 block">Denominator</label>
-                      <input
-                        type="number"
-                        value={indicator.denominator}
-                        onChange={(e) => {
-                          const newIndicators = [...indicators];
-                          newIndicators[index].denominator = parseInt(e.target.value) || 1;
-                          setIndicators(newIndicators);
-                        }}
-                        className="w-full bg-transparent border border-gray-600 rounded-lg px-4 py-2 text-lg focus:outline-none focus:border-pink-500"
-                      />
-                    </div>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setIndicators(indicators.filter(ind => ind.id !== indicator.id));
-                    }}
-                    className="w-full py-2 text-red-500 hover:bg-gray-800 rounded-lg transition-colors"
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))}
-
-              <button
-                onClick={() => {
-                  const newIndicator: Indicator = {
-                    id: Date.now().toString(),
-                    label: 'New Indicator',
-                    numerator: 0,
-                    denominator: 7
-                  };
-                  setIndicators([...indicators, newIndicator]);
-                }}
-                className="w-full py-4 border-2 border-dashed border-gray-600 rounded-2xl text-gray-400 hover:border-pink-500 hover:text-pink-500 transition-colors flex items-center justify-center gap-2"
+          <div className="grid grid-cols-2 gap-3">
+            {indicators.map((indicator) => (
+              <div
+                key={indicator.id}
+                className="bg-white border border-gray-200 rounded-xl p-3 shadow-sm"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                </svg>
-                Add Indicator
-              </button>
-            </div>
-          )}
+                <div className="flex items-start gap-2">
+                  <div className="flex-shrink-0">
+                    <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <div className="text-xs text-gray-600 mb-1 truncate">
+                      {indicator.label}
+                    </div>
+                    <div className="text-2xl font-medium text-pink-700">
+                      {indicator.numerator}/{indicator.denominator}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       )}
 
