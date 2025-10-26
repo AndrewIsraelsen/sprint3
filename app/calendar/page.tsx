@@ -767,11 +767,11 @@ export default function Home() {
 
       {/* Home Screen */}
       {activeTab === 'home' && (
-        <div className="flex-1 overflow-y-auto p-4 bg-gray-50">
+        <div className="flex-1 overflow-y-auto p-4 bg-black">
           <div className="mb-4">
             <div className="flex items-center justify-between">
-              <h2 className="text-lg font-medium text-gray-900">Weekly Key Indicators</h2>
-              <button className="text-pink-600 text-sm font-medium">View all</button>
+              <h2 className="text-lg font-medium text-white">Weekly Key Indicators</h2>
+              <button className="text-pink-500 text-sm font-medium">View all</button>
             </div>
           </div>
 
@@ -779,19 +779,19 @@ export default function Home() {
             {indicators.map((indicator) => (
               <div
                 key={indicator.id}
-                className="bg-white border border-gray-200 rounded-xl p-3 shadow-sm"
+                className="bg-gray-900 border border-gray-700 rounded-xl p-3"
               >
                 <div className="flex items-start gap-2">
                   <div className="flex-shrink-0">
-                    <svg className="w-8 h-8 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <svg className="w-8 h-8 text-pink-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
                   </div>
                   <div className="flex-1 min-w-0">
-                    <div className="text-xs text-gray-600 mb-1 truncate">
+                    <div className="text-xs text-gray-400 mb-1 truncate">
                       {indicator.label}
                     </div>
-                    <div className="text-2xl font-medium text-pink-700">
+                    <div className="text-2xl font-medium text-pink-500">
                       {indicator.numerator}/{indicator.denominator}
                     </div>
                   </div>
