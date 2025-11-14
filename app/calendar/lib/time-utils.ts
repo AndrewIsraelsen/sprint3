@@ -73,24 +73,35 @@ export const parseTimeToHour = (timeStr: string): number => {
 
 /**
  * Parses time string to total minutes from midnight
- * @param timeStr - Time string in format "HH:MM AM/PM"
+ * @param timeStr - Time string in format "HH:MM AM/PM" or "HH:MM" (24-hour)
  * @returns Total minutes from midnight
  */
 export const parseTimeToMinutes = (timeStr: string): number => {
-  const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
-  if (!match) return 0;
+  // Try 12-hour format first (AM/PM)
+  const match12hr = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if (match12hr) {
+    let hour = parseInt(match12hr[1]);
+    const minutes = parseInt(match12hr[2]);
+    const period = match12hr[3].toUpperCase();
 
-  let hour = parseInt(match[1]);
-  const minutes = parseInt(match[2]);
-  const period = match[3].toUpperCase();
+    if (period === 'PM' && hour !== 12) {
+      hour += 12;
+    } else if (period === 'AM' && hour === 12) {
+      hour = 0;
+    }
 
-  if (period === 'PM' && hour !== 12) {
-    hour += 12;
-  } else if (period === 'AM' && hour === 12) {
-    hour = 0;
+    return hour * 60 + minutes;
   }
 
-  return hour * 60 + minutes;
+  // Try 24-hour format (HH:MM)
+  const match24hr = timeStr.match(/(\d+):(\d+)/);
+  if (match24hr) {
+    const hour = parseInt(match24hr[1]);
+    const minutes = parseInt(match24hr[2]);
+    return hour * 60 + minutes;
+  }
+
+  return 0;
 };
 
 /**
