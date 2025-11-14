@@ -102,7 +102,7 @@ export const HomeScreen = ({
                     <div className="text-2xl font-medium text-white">
                       {indicator.measurement_type === 'time' ? (
                         <>
-                          {indicator.actual_hours.toFixed(1)}/{indicator.goal_hours || 0}
+                          {indicator.actual_hours % 1 === 0 ? indicator.actual_hours : indicator.actual_hours.toFixed(1)}/{indicator.goal_hours || 0}
                         </>
                       ) : (
                         <>
