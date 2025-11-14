@@ -143,6 +143,7 @@ export const generateDemoIndicators = (): Indicator[] => {
     {
       id: 'demo-ind-1',
       event_type: 'Church',
+      measurement_type: 'time',
       goal_hours: 3,
       actual_hours: 2,
       display_order: 0,
@@ -151,6 +152,7 @@ export const generateDemoIndicators = (): Indicator[] => {
     {
       id: 'demo-ind-2',
       event_type: 'Family',
+      measurement_type: 'time',
       goal_hours: 10,
       actual_hours: 8,
       display_order: 1,
@@ -159,6 +161,7 @@ export const generateDemoIndicators = (): Indicator[] => {
     {
       id: 'demo-ind-3',
       event_type: 'School',
+      measurement_type: 'time',
       goal_hours: 15,
       actual_hours: 12,
       display_order: 2,
@@ -167,8 +170,10 @@ export const generateDemoIndicators = (): Indicator[] => {
     {
       id: 'demo-ind-4',
       event_type: 'Work',
-      goal_hours: 20,
-      actual_hours: 18,
+      measurement_type: 'frequency',
+      goal_frequency: 5,
+      actual_frequency: 3,
+      actual_hours: 0,
       display_order: 3,
       color: 'bg-blue-500',
     },

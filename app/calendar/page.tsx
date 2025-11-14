@@ -15,6 +15,7 @@ import { HomeScreen } from './components/HomeScreen';
 import { UpgradeModal } from './components/UpgradeModal';
 import { DatePickerModal } from './components/DatePickerModal';
 import { AddIndicatorModal } from './components/AddIndicatorModal';
+import { EditIndicatorModal } from './components/EditIndicatorModal';
 import { CalendarGrid } from './components/CalendarGrid';
 import { WeekNavigation } from './components/WeekNavigation';
 import { useEvents } from './hooks/useEvents';
@@ -22,7 +23,7 @@ import { useIndicators } from './hooks/useIndicators';
 import { useDragDrop } from './hooks/useDragDrop';
 import { STRIPE_PRICE_IDS } from './lib/constants';
 import { formatHeaderDate } from './lib/time-utils';
-import { Event } from './lib/types';
+import { Event, Indicator } from './lib/types';
 import { isDemoMode, disableDemoMode } from './lib/demo-data';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
@@ -52,10 +53,12 @@ export default function CalendarPage() {
   // Modal visibility
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showAddIndicatorModal, setShowAddIndicatorModal] = useState(false);
+  const [showEditIndicatorModal, setShowEditIndicatorModal] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   // Indicator editing
   const [isEditingIndicators, setIsEditingIndicators] = useState(false);
+  const [selectedIndicator, setSelectedIndicator] = useState<Indicator | null>(null);
 
   // Selected event for viewing/editing
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
@@ -68,7 +71,7 @@ export default function CalendarPage() {
   // ============================================================================
 
   const { events, createEvent, updateEvent, deleteEvent, updateEventTime, setEvents } = useEvents();
-  const { indicators, createIndicator, deleteIndicator } = useIndicators(events);
+  const { indicators, createIndicator, updateIndicator, deleteIndicator } = useIndicators(events);
   const dragDrop = useDragDrop(selectedDate, setSelectedDate, updateEventTime);
 
   // ============================================================================
@@ -109,17 +112,40 @@ export default function CalendarPage() {
   };
 
   /**
+   * Handle indicator click for editing
+   */
+  const handleIndicatorClick = (indicator: Indicator) => {
+    setSelectedIndicator(indicator);
+    setShowEditIndicatorModal(true);
+  };
+
+  /**
+   * Handle indicator update
+   */
+  const handleUpdateIndicator = async (updates: any) => {
+    if (!selectedIndicator) return false;
+    const success = await updateIndicator(selectedIndicator.id, updates);
+    if (success) {
+      setShowEditIndicatorModal(false);
+      setSelectedIndicator(null);
+    }
+    return success;
+  };
+
+  /**
    * Handle indicator deletion with API call
    */
   const handleDeleteIndicator = async (id: string) => {
     await deleteIndicator(id);
+    setShowEditIndicatorModal(false);
+    setSelectedIndicator(null);
   };
 
   /**
    * Handle adding new indicator
    */
   const handleAddIndicator = async (eventType: string) => {
-    await createIndicator(eventType, 1);
+    await createIndicator(eventType, 'time', 1);
   };
 
   /**
@@ -235,6 +261,7 @@ export default function CalendarPage() {
           onToggleEdit={() => setIsEditingIndicators(!isEditingIndicators)}
           onDeleteIndicator={handleDeleteIndicator}
           onAddIndicator={() => setShowAddIndicatorModal(true)}
+          onIndicatorClick={handleIndicatorClick}
           onLogout={handleLogout}
           inDemoMode={inDemoMode}
         />
@@ -313,6 +340,19 @@ export default function CalendarPage() {
         onClose={() => setShowAddIndicatorModal(false)}
         onAddIndicator={handleAddIndicator}
       />
+
+      {selectedIndicator && (
+        <EditIndicatorModal
+          indicator={selectedIndicator}
+          isOpen={showEditIndicatorModal}
+          onClose={() => {
+            setShowEditIndicatorModal(false);
+            setSelectedIndicator(null);
+          }}
+          onSave={handleUpdateIndicator}
+          onDelete={() => handleDeleteIndicator(selectedIndicator.id)}
+        />
+      )}
 
       <DatePickerModal
         isOpen={showDatePicker}

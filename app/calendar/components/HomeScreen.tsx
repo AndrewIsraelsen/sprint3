@@ -10,6 +10,7 @@ interface HomeScreenProps {
   onToggleEdit: () => void;
   onDeleteIndicator: (id: string) => void;
   onAddIndicator: () => void;
+  onIndicatorClick?: (indicator: Indicator) => void;
   onLogout?: () => void;
   inDemoMode?: boolean;
 }
@@ -20,6 +21,7 @@ export const HomeScreen = ({
   onToggleEdit,
   onDeleteIndicator,
   onAddIndicator,
+  onIndicatorClick,
   onLogout,
   inDemoMode,
 }: HomeScreenProps) => {
@@ -74,7 +76,10 @@ export const HomeScreen = ({
             {indicators.map((indicator) => (
               <div
                 key={indicator.id}
-                className="bg-gray-900 border border-gray-700 rounded-xl p-3 relative"
+                onClick={() => !isEditing && onIndicatorClick && onIndicatorClick(indicator)}
+                className={`bg-gray-900 border border-gray-700 rounded-xl p-3 relative ${
+                  !isEditing && onIndicatorClick ? 'cursor-pointer hover:border-pink-500 transition-colors' : ''
+                }`}
               >
                 {isEditing && (
                   <button
