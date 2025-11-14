@@ -45,8 +45,8 @@ export const TimePickerModal = ({
     return hour;
   });
 
-  // Minute options in 15-minute increments
-  const minuteOptions = ['00', '15', '30', '45'];
+  // Minute options in 30-minute increments
+  const minuteOptions = ['00', '30'];
 
   return (
     <div

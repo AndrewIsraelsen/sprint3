@@ -128,14 +128,14 @@ export const useDragDrop = (
     const clientY = 'touches' in e ? e.changedTouches[0].clientY : e.clientY;
     const deltaY = clientY - dragStartY;
 
-    // Calculate new time based on drag distance (snap to 15-minute intervals)
+    // Calculate new time based on drag distance (snap to 30-minute intervals)
     const minutesMoved = Math.round(deltaY / HOUR_HEIGHT_PX * 60);
     const startMinutes = draggedEvent.time * 60 + (parseFloat(draggedEvent.startTime.match(/\d+/)?.[0] || '0') % 60);
     const totalMinutes = startMinutes + minutesMoved;
 
-    // Snap to 15-minute intervals and clamp to valid range
-    const snappedMinutes = Math.round(totalMinutes / 15) * 15;
-    const clampedMinutes = Math.max(0, Math.min(23 * 60 + 45, snappedMinutes));
+    // Snap to 30-minute intervals and clamp to valid range
+    const snappedMinutes = Math.round(totalMinutes / 30) * 30;
+    const clampedMinutes = Math.max(0, Math.min(23 * 60 + 30, snappedMinutes));
 
     const newHour = Math.floor(clampedMinutes / 60);
     const newMinutes = clampedMinutes % 60;

@@ -43,23 +43,32 @@ export const convertFromTimestamp = (isoString: string): { date: Date; timeStr: 
 
 /**
  * Parses time string to hour (0-23)
- * @param timeStr - Time string in format "HH:MM AM/PM"
+ * @param timeStr - Time string in format "HH:MM AM/PM" or "HH:MM" (24-hour)
  * @returns Hour in 24-hour format
  */
 export const parseTimeToHour = (timeStr: string): number => {
-  const match = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
-  if (!match) return 0;
+  // Try 12-hour format first (AM/PM)
+  const match12hr = timeStr.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if (match12hr) {
+    let hour = parseInt(match12hr[1]);
+    const period = match12hr[3].toUpperCase();
 
-  let hour = parseInt(match[1]);
-  const period = match[3].toUpperCase();
+    if (period === 'PM' && hour !== 12) {
+      hour += 12;
+    } else if (period === 'AM' && hour === 12) {
+      hour = 0;
+    }
 
-  if (period === 'PM' && hour !== 12) {
-    hour += 12;
-  } else if (period === 'AM' && hour === 12) {
-    hour = 0;
+    return hour;
   }
 
-  return hour;
+  // Try 24-hour format (HH:MM)
+  const match24hr = timeStr.match(/(\d+):(\d+)/);
+  if (match24hr) {
+    return parseInt(match24hr[1]);
+  }
+
+  return 0;
 };
 
 /**

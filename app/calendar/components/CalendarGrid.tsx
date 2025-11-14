@@ -137,8 +137,8 @@ export const CalendarGrid = ({
             {dayEvents.map(event => {
               const offset = calculateEventOffset(event.startTime);
               const heightInPixels = Math.max(event.duration * HOUR_HEIGHT_PX, 32);
-              // Add 2px padding from top for better visual alignment
-              let topPosition = event.time * HOUR_HEIGHT_PX + offset * HOUR_HEIGHT_PX + 2;
+              // Position events flush with the hour line
+              let topPosition = event.time * HOUR_HEIGHT_PX + offset * HOUR_HEIGHT_PX;
 
               // If this is the dragged event, apply drag offset
               if (isDragging && draggedEvent?.id === event.id) {
@@ -167,7 +167,7 @@ export const CalendarGrid = ({
                   }`}
                   style={{
                     top: `${topPosition}px`,
-                    height: `${heightInPixels - 4}px`,
+                    height: `${heightInPixels}px`,
                     left: `calc(${leftPercent}% + 6px)`,
                     width: `calc(${widthPercent}% - 12px)`
                   }}
