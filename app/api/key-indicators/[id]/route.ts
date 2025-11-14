@@ -17,11 +17,13 @@ export async function PATCH(
 
     const { id } = await params
     const body = await request.json()
-    const { event_type, goal_hours, display_order } = body
+    const { event_type, measurement_type, goal_hours, goal_frequency, display_order } = body
 
     const updateData: any = {}
     if (event_type !== undefined) updateData.event_type = event_type
+    if (measurement_type !== undefined) updateData.measurement_type = measurement_type
     if (goal_hours !== undefined) updateData.goal_hours = goal_hours
+    if (goal_frequency !== undefined) updateData.goal_frequency = goal_frequency
     if (display_order !== undefined) updateData.display_order = display_order
 
     const { data, error } = await supabase

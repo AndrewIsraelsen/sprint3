@@ -44,7 +44,7 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json()
-    const { event_type, goal_hours, display_order } = body
+    const { event_type, measurement_type, goal_hours, goal_frequency, display_order } = body
 
     if (!event_type) {
       return NextResponse.json(
@@ -53,16 +53,23 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    const insertData: any = {
+      user_id: user.id,
+      event_type,
+      measurement_type: measurement_type || 'time',
+      display_order: display_order || 0,
+    }
+
+    // Set goal based on measurement type
+    if (measurement_type === 'frequency') {
+      insertData.goal_frequency = goal_frequency || null
+    } else {
+      insertData.goal_hours = goal_hours || null
+    }
+
     const { data, error } = await supabase
       .from('key_indicators')
-      .insert([
-        {
-          user_id: user.id,
-          event_type,
-          goal_hours: goal_hours || 1,
-          display_order: display_order || 0,
-        },
-      ])
+      .insert([insertData])
       .select()
       .single()
 

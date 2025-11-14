@@ -95,7 +95,15 @@ export const HomeScreen = ({
                       {indicator.event_type}
                     </div>
                     <div className="text-2xl font-medium text-white">
-                      {indicator.actual_hours.toFixed(1)}/{indicator.goal_hours}
+                      {indicator.measurement_type === 'time' ? (
+                        <>
+                          {indicator.actual_hours.toFixed(1)}/{indicator.goal_hours || 0}
+                        </>
+                      ) : (
+                        <>
+                          {indicator.actual_frequency || 0}/{indicator.goal_frequency || 0}
+                        </>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -104,7 +112,9 @@ export const HomeScreen = ({
                   <div
                     className={`${indicator.color} h-2 rounded-full transition-all duration-300`}
                     style={{
-                      width: `${Math.min((indicator.actual_hours / indicator.goal_hours) * 100, 100)}%`
+                      width: indicator.measurement_type === 'time'
+                        ? `${Math.min((indicator.actual_hours / (indicator.goal_hours || 1)) * 100, 100)}%`
+                        : `${Math.min(((indicator.actual_frequency || 0) / (indicator.goal_frequency || 1)) * 100, 100)}%`
                     }}
                   />
                 </div>

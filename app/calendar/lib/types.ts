@@ -15,6 +15,8 @@ export type Event = {
   endTime: string;
   repeat: string;
   backup: boolean;
+  backupPattern?: 'none' | 'diagonal'; // Visual pattern for backup events
+  recurrenceEndDate?: Date | null; // End date for recurring events
   address?: string;
   createdAt: Date;
   updatedAt: Date;
@@ -28,8 +30,11 @@ export type EventType = {
 export type Indicator = {
   id: string;
   event_type: string;
-  goal_hours: number;
-  actual_hours: number;
+  measurement_type: 'time' | 'frequency'; // Type of measurement
+  goal_hours?: number | null; // For time-based indicators
+  goal_frequency?: number | null; // For frequency-based indicators
+  actual_hours: number; // Calculated from events (for time-based)
+  actual_frequency?: number; // Calculated from events (for frequency-based)
   display_order: number;
   color: string;
 };

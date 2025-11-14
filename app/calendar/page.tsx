@@ -46,8 +46,8 @@ export default function CalendarPage() {
   // Tab navigation
   const [activeTab, setActiveTab] = useState('home');
 
-  // Date selection
-  const [selectedDate, setSelectedDate] = useState(new Date(2026, 3, 2));
+  // Date selection - defaults to today
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
   // Modal visibility
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
