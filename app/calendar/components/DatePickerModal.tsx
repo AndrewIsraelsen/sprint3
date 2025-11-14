@@ -22,6 +22,7 @@ export const DatePickerModal = ({
 }: DatePickerModalProps) => {
   const [pickerMonth, setPickerMonth] = useState(selectedDate.getMonth());
   const [pickerYear, setPickerYear] = useState(selectedDate.getFullYear());
+  const [showMonthYearPicker, setShowMonthYearPicker] = useState(false);
 
   if (!isOpen) return null;
 
@@ -72,9 +73,12 @@ export const DatePickerModal = ({
 
         {/* Month Navigation */}
         <div className="flex items-center justify-between mb-6">
-          <button className="flex items-center gap-2 text-lg hover:bg-gray-700 px-3 py-2 rounded">
+          <button
+            onClick={() => setShowMonthYearPicker(!showMonthYearPicker)}
+            className="flex items-center gap-2 text-lg hover:bg-gray-700 px-3 py-2 rounded"
+          >
             <span>{MONTH_NAMES[pickerMonth]} {pickerYear}</span>
-            <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <svg className={`w-4 h-4 transition-transform ${showMonthYearPicker ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
             </svg>
           </button>
@@ -98,6 +102,48 @@ export const DatePickerModal = ({
             </button>
           </div>
         </div>
+
+        {/* Month/Year Picker Dropdown */}
+        {showMonthYearPicker && (
+          <div className="mb-6 bg-gray-900 rounded-lg p-4">
+            <div className="grid grid-cols-2 gap-4">
+              {/* Month Selector */}
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Month</label>
+                <select
+                  value={pickerMonth}
+                  onChange={(e) => setPickerMonth(Number(e.target.value))}
+                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
+                >
+                  {MONTH_NAMES.map((month, index) => (
+                    <option key={index} value={index}>
+                      {month}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {/* Year Selector */}
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Year</label>
+                <select
+                  value={pickerYear}
+                  onChange={(e) => setPickerYear(Number(e.target.value))}
+                  className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-pink-500"
+                >
+                  {Array.from({ length: 20 }, (_, i) => {
+                    const year = new Date().getFullYear() - 5 + i;
+                    return (
+                      <option key={year} value={year}>
+                        {year}
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Calendar Grid */}
         <div className="mb-6">
