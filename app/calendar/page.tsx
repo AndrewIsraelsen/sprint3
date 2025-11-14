@@ -16,6 +16,7 @@ import { UpgradeModal } from './components/UpgradeModal';
 import { DatePickerModal } from './components/DatePickerModal';
 import { AddIndicatorModal } from './components/AddIndicatorModal';
 import { EditIndicatorModal } from './components/EditIndicatorModal';
+import { IndicatorInfoModal } from './components/IndicatorInfoModal';
 import { CalendarGrid } from './components/CalendarGrid';
 import { WeekNavigation } from './components/WeekNavigation';
 import { useEvents } from './hooks/useEvents';
@@ -54,6 +55,7 @@ export default function CalendarPage() {
   const [showUpgradeModal, setShowUpgradeModal] = useState(false);
   const [showAddIndicatorModal, setShowAddIndicatorModal] = useState(false);
   const [showEditIndicatorModal, setShowEditIndicatorModal] = useState(false);
+  const [showIndicatorInfoModal, setShowIndicatorInfoModal] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   // Indicator editing
@@ -112,9 +114,17 @@ export default function CalendarPage() {
   };
 
   /**
-   * Handle indicator click for editing
+   * Handle indicator click for viewing info (normal mode)
    */
-  const handleIndicatorClick = (indicator: Indicator) => {
+  const handleIndicatorInfoClick = (indicator: Indicator) => {
+    setSelectedIndicator(indicator);
+    setShowIndicatorInfoModal(true);
+  };
+
+  /**
+   * Handle indicator click for editing (edit mode)
+   */
+  const handleIndicatorEditClick = (indicator: Indicator) => {
     setSelectedIndicator(indicator);
     setShowEditIndicatorModal(true);
   };
@@ -265,7 +275,8 @@ export default function CalendarPage() {
           onToggleEdit={() => setIsEditingIndicators(!isEditingIndicators)}
           onDeleteIndicator={handleDeleteIndicator}
           onAddIndicator={() => setShowAddIndicatorModal(true)}
-          onIndicatorClick={handleIndicatorClick}
+          onIndicatorInfoClick={handleIndicatorInfoClick}
+          onIndicatorEditClick={handleIndicatorEditClick}
           onLogout={handleLogout}
           inDemoMode={inDemoMode}
         />
@@ -346,16 +357,28 @@ export default function CalendarPage() {
       />
 
       {selectedIndicator && (
-        <EditIndicatorModal
-          indicator={selectedIndicator}
-          isOpen={showEditIndicatorModal}
-          onClose={() => {
-            setShowEditIndicatorModal(false);
-            setSelectedIndicator(null);
-          }}
-          onSave={handleUpdateIndicator}
-          onDelete={() => handleDeleteIndicator(selectedIndicator.id)}
-        />
+        <>
+          <EditIndicatorModal
+            indicator={selectedIndicator}
+            isOpen={showEditIndicatorModal}
+            onClose={() => {
+              setShowEditIndicatorModal(false);
+              setSelectedIndicator(null);
+            }}
+            onSave={handleUpdateIndicator}
+            onDelete={() => handleDeleteIndicator(selectedIndicator.id)}
+          />
+
+          <IndicatorInfoModal
+            indicator={selectedIndicator}
+            events={events}
+            isOpen={showIndicatorInfoModal}
+            onClose={() => {
+              setShowIndicatorInfoModal(false);
+              setSelectedIndicator(null);
+            }}
+          />
+        </>
       )}
 
       <DatePickerModal

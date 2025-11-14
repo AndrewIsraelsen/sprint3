@@ -10,7 +10,8 @@ interface HomeScreenProps {
   onToggleEdit: () => void;
   onDeleteIndicator: (id: string) => void;
   onAddIndicator: () => void;
-  onIndicatorClick?: (indicator: Indicator) => void;
+  onIndicatorInfoClick?: (indicator: Indicator) => void; // Normal click - show info
+  onIndicatorEditClick?: (indicator: Indicator) => void; // Edit mode click - edit
   onLogout?: () => void;
   inDemoMode?: boolean;
 }
@@ -21,7 +22,8 @@ export const HomeScreen = ({
   onToggleEdit,
   onDeleteIndicator,
   onAddIndicator,
-  onIndicatorClick,
+  onIndicatorInfoClick,
+  onIndicatorEditClick,
   onLogout,
   inDemoMode,
 }: HomeScreenProps) => {
@@ -76,14 +78,23 @@ export const HomeScreen = ({
             {indicators.map((indicator) => (
               <div
                 key={indicator.id}
-                onClick={() => !isEditing && onIndicatorClick && onIndicatorClick(indicator)}
+                onClick={() => {
+                  if (isEditing && onIndicatorEditClick) {
+                    onIndicatorEditClick(indicator);
+                  } else if (!isEditing && onIndicatorInfoClick) {
+                    onIndicatorInfoClick(indicator);
+                  }
+                }}
                 className={`bg-gray-900 border border-gray-700 rounded-xl p-3 relative ${
-                  !isEditing && onIndicatorClick ? 'cursor-pointer hover:border-pink-500 transition-colors' : ''
+                  (isEditing && onIndicatorEditClick) || (!isEditing && onIndicatorInfoClick) ? 'cursor-pointer hover:border-pink-500 transition-colors' : ''
                 }`}
               >
                 {isEditing && (
                   <button
-                    onClick={() => onDeleteIndicator(indicator.id)}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      onDeleteIndicator(indicator.id);
+                    }}
                     className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center hover:bg-red-600"
                   >
                     <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
