@@ -108,15 +108,25 @@ export const calculateEventDuration = (startTime: string, endTime: string): numb
 
 /**
  * Calculates the offset within an hour for positioning
- * @param startTime - Start time string
+ * @param startTime - Start time string in "HH:MM AM/PM" or "HH:MM" format
  * @returns Fraction of hour (0-1) for positioning
  */
 export const calculateEventOffset = (startTime: string): number => {
-  const match = startTime.match(/(\d+):(\d+)\s*(AM|PM)/i);
-  if (!match) return 0;
+  // Try 12-hour format first (AM/PM)
+  const match12hr = startTime.match(/(\d+):(\d+)\s*(AM|PM)/i);
+  if (match12hr) {
+    const minutes = parseInt(match12hr[2]);
+    return minutes / 60;
+  }
 
-  const minutes = parseInt(match[2]);
-  return minutes / 60;
+  // Try 24-hour format (HH:MM)
+  const match24hr = startTime.match(/(\d+):(\d+)/);
+  if (match24hr) {
+    const minutes = parseInt(match24hr[2]);
+    return minutes / 60;
+  }
+
+  return 0;
 };
 
 /**
