@@ -21,6 +21,65 @@ interface CalendarGridProps {
   onEventDragEnd: (e: React.MouseEvent | React.TouchEvent) => void;
 }
 
+/**
+ * Helper to detect if two events overlap in time
+ */
+const eventsOverlap = (event1: Event, event2: Event): boolean => {
+  const start1 = event1.time + calculateEventOffset(event1.startTime);
+  const end1 = start1 + event1.duration;
+  const start2 = event2.time + calculateEventOffset(event2.startTime);
+  const end2 = start2 + event2.duration;
+
+  return start1 < end2 && start2 < end1;
+};
+
+/**
+ * Calculate column layout for overlapping events
+ */
+const calculateEventLayout = (events: Event[]) => {
+  const layout = new Map<string, { column: number; totalColumns: number }>();
+  const sorted = [...events].sort((a, b) => {
+    const aStart = a.time + calculateEventOffset(a.startTime);
+    const bStart = b.time + calculateEventOffset(b.startTime);
+    return aStart - bStart;
+  });
+
+  for (const event of sorted) {
+    // Find all events that overlap with this one
+    const overlapping = sorted.filter(e =>
+      e.id !== event.id && eventsOverlap(event, e)
+    );
+
+    // Determine which column this event should be in
+    const usedColumns = new Set(
+      overlapping
+        .filter(e => layout.has(e.id))
+        .map(e => layout.get(e.id)!.column)
+    );
+
+    let column = 0;
+    while (usedColumns.has(column)) {
+      column++;
+    }
+
+    const totalColumns = Math.max(column + 1, ...overlapping.map(e =>
+      layout.get(e.id)?.totalColumns || 1
+    ));
+
+    layout.set(event.id, { column, totalColumns });
+
+    // Update totalColumns for all overlapping events
+    for (const overlap of overlapping) {
+      if (layout.has(overlap.id)) {
+        const existing = layout.get(overlap.id)!;
+        layout.set(overlap.id, { ...existing, totalColumns });
+      }
+    }
+  }
+
+  return layout;
+};
+
 export const CalendarGrid = ({
   selectedDate,
   events,
@@ -40,6 +99,9 @@ export const CalendarGrid = ({
   const dayEvents = events.filter(
     event => event.date.toDateString() === selectedDate.toDateString()
   );
+
+  // Calculate layout for overlapping events
+  const eventLayout = calculateEventLayout(dayEvents);
 
   return (
     <div className="flex-1 overflow-y-auto relative">
@@ -83,6 +145,11 @@ export const CalendarGrid = ({
                 topPosition += dragOffsetY;
               }
 
+              // Get layout info for overlapping events
+              const layout = eventLayout.get(event.id) || { column: 0, totalColumns: 1 };
+              const widthPercent = 100 / layout.totalColumns;
+              const leftPercent = (layout.column * widthPercent);
+
               return (
                 <button
                   key={event.id}
@@ -94,12 +161,14 @@ export const CalendarGrid = ({
                       onEventClick(event);
                     }
                   }}
-                  className={`absolute left-1 right-1 ${event.color} rounded px-2 py-1 text-xs text-black font-medium overflow-hidden flex items-start cursor-move pointer-events-auto ${
+                  className={`absolute ${event.color} rounded px-2 py-1 text-xs text-black font-medium overflow-hidden flex items-start cursor-move pointer-events-auto ${
                     isDragging && draggedEvent?.id === event.id ? 'opacity-70 z-50' : ''
                   }`}
                   style={{
                     top: `${topPosition}px`,
-                    height: `${heightInPixels}px`
+                    height: `${heightInPixels}px`,
+                    left: `calc(${leftPercent}% + 4px)`,
+                    width: `calc(${widthPercent}% - 8px)`
                   }}
                 >
                   <span className="line-clamp-3">{event.title}</span>
