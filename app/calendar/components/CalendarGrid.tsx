@@ -118,13 +118,16 @@ export const CalendarGrid = ({
         {/* Days grid */}
         <div className="flex-1 relative">
           {/* Hour slots */}
-          {hours.map((hour, index) => (
-            <button
-              key={index}
-              onClick={() => onSlotClick(index)}
-              className="w-full h-16 border-b border-gray-800 hover:bg-blue-900 hover:bg-opacity-30 transition-colors text-left relative"
-            />
-          ))}
+          <div className="absolute inset-0">
+            {hours.map((hour, index) => (
+              <button
+                key={index}
+                onClick={() => onSlotClick(index)}
+                className="w-full h-16 border-b border-gray-800 hover:bg-blue-900 hover:bg-opacity-30 transition-colors text-left relative block"
+                style={{ top: `${index * 64}px`, position: 'absolute' }}
+              />
+            ))}
+          </div>
 
           {/* Render all events with proper positioning */}
           <div
