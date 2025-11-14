@@ -73,35 +73,38 @@ export const useEvents = () => {
   /**
    * Create a new event
    */
-  const createEvent = async (eventData: {
-    type: string;
-    color: string;
-    title: string;
-    notes: string;
-    date: Date;
-    startTime: string;
-    endTime: string;
-    repeat: string;
-    backup: boolean;
-    address: string;
-  }): Promise<boolean> => {
-    const startTimestamp = convertToTimestamp(eventData.date, eventData.startTime);
-    const endTimestamp = convertToTimestamp(eventData.date, eventData.endTime);
+  const createEvent = async (eventData: Partial<Event>): Promise<boolean> => {
+    const defaults = {
+      type: 'Other',
+      color: 'bg-gray-400',
+      title: 'New Event',
+      notes: '',
+      date: new Date(),
+      startTime: '12:00',
+      endTime: '13:00',
+      repeat: 'Does not repeat',
+      backup: false,
+      address: '',
+    };
+    const fullEventData = { ...defaults, ...eventData };
+
+    const startTimestamp = convertToTimestamp(fullEventData.date, fullEventData.startTime);
+    const endTimestamp = convertToTimestamp(fullEventData.date, fullEventData.endTime);
 
     try {
       const response = await fetch('/api/calendar/events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: eventData.title || eventData.type,
-          notes: eventData.notes,
+          title: fullEventData.title || fullEventData.type,
+          notes: fullEventData.notes,
           start_time: startTimestamp,
           end_time: endTimestamp,
-          address: eventData.address,
-          event_type: eventData.type,
-          color: eventData.color,
-          repeat_pattern: eventData.repeat,
-          has_backup: eventData.backup,
+          address: fullEventData.address,
+          event_type: fullEventData.type,
+          color: fullEventData.color,
+          repeat_pattern: fullEventData.repeat,
+          has_backup: fullEventData.backup,
         }),
       });
 
@@ -109,20 +112,23 @@ export const useEvents = () => {
         const { event: createdEvent } = await response.json();
         const newEvent: Event = {
           id: createdEvent.id,
-          type: eventData.type,
-          color: eventData.color,
-          time: parseTimeToHour(eventData.startTime),
-          duration: calculateEventDuration(eventData.startTime, eventData.endTime),
-          title: eventData.title || eventData.type,
-          notes: eventData.notes,
-          date: eventData.date,
-          startTime: eventData.startTime,
-          endTime: eventData.endTime,
-          repeat: eventData.repeat,
-          backup: eventData.backup,
-          address: eventData.address,
+          type: fullEventData.type,
+          color: fullEventData.color,
+          time: parseTimeToHour(fullEventData.startTime),
+          duration: calculateEventDuration(
+            fullEventData.startTime,
+            fullEventData.endTime
+          ),
+          title: fullEventData.title || fullEventData.type,
+          notes: fullEventData.notes,
+          date: fullEventData.date,
+          startTime: fullEventData.startTime,
+          endTime: fullEventData.endTime,
+          repeat: fullEventData.repeat,
+          backup: fullEventData.backup,
+          address: fullEventData.address,
           createdAt: new Date(createdEvent.created_at),
-          updatedAt: new Date(createdEvent.updated_at)
+          updatedAt: new Date(createdEvent.updated_at),
         };
         setEvents([...events, newEvent]);
         return true;
@@ -137,35 +143,33 @@ export const useEvents = () => {
   /**
    * Update an existing event
    */
-  const updateEvent = async (eventId: string, eventData: {
-    type: string;
-    color: string;
-    title: string;
-    notes: string;
-    date: Date;
-    startTime: string;
-    endTime: string;
-    repeat: string;
-    backup: boolean;
-    address: string;
-  }): Promise<boolean> => {
-    const startTimestamp = convertToTimestamp(eventData.date, eventData.startTime);
-    const endTimestamp = convertToTimestamp(eventData.date, eventData.endTime);
+  const updateEvent = async (eventId: string, eventData: Partial<Event>): Promise<boolean> => {
+    const eventToUpdate = events.find(e => e.id === eventId);
+    if (!eventToUpdate) {
+      console.error("Event to update not found");
+      return false;
+    }
+
+    // Merge partial data with existing event data to form a complete event for timestamps
+    const fullEventData = { ...eventToUpdate, ...eventData };
+
+    const startTimestamp = convertToTimestamp(fullEventData.date, fullEventData.startTime);
+    const endTimestamp = convertToTimestamp(fullEventData.date, fullEventData.endTime);
 
     try {
       const response = await fetch(`/api/calendar/events/${eventId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          title: eventData.title || eventData.type,
-          notes: eventData.notes,
+          title: fullEventData.title || fullEventData.type,
+          notes: fullEventData.notes,
           start_time: startTimestamp,
           end_time: endTimestamp,
-          address: eventData.address,
-          event_type: eventData.type,
-          color: eventData.color,
-          repeat_pattern: eventData.repeat,
-          has_backup: eventData.backup,
+          address: fullEventData.address,
+          event_type: fullEventData.type,
+          color: fullEventData.color,
+          repeat_pattern: fullEventData.repeat,
+          has_backup: fullEventData.backup,
         }),
       });
 
@@ -174,19 +178,9 @@ export const useEvents = () => {
         const updatedEvents = events.map(evt =>
           evt.id === eventId
             ? {
-                ...evt,
-                type: eventData.type,
-                color: eventData.color,
-                title: eventData.title || eventData.type,
-                notes: eventData.notes,
-                date: eventData.date,
-                startTime: eventData.startTime,
-                endTime: eventData.endTime,
-                time: parseTimeToHour(eventData.startTime),
-                duration: calculateEventDuration(eventData.startTime, eventData.endTime),
-                repeat: eventData.repeat,
-                backup: eventData.backup,
-                address: eventData.address,
+                ...fullEventData,
+                time: parseTimeToHour(fullEventData.startTime),
+                duration: calculateEventDuration(fullEventData.startTime, fullEventData.endTime),
                 updatedAt: new Date(updatedEvent.updated_at)
               }
             : evt
