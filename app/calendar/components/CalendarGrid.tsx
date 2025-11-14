@@ -122,7 +122,7 @@ export const CalendarGrid = ({
             <button
               key={index}
               onClick={() => onSlotClick(index)}
-              className="w-full h-16 border-b border-gray-800 hover:bg-gray-800 transition-colors text-left relative"
+              className="w-full h-16 border-b border-gray-800 hover:bg-blue-900 hover:bg-opacity-30 transition-colors text-left relative"
             />
           ))}
 
@@ -137,7 +137,8 @@ export const CalendarGrid = ({
             {dayEvents.map(event => {
               const offset = calculateEventOffset(event.startTime);
               const heightInPixels = Math.max(event.duration * HOUR_HEIGHT_PX, 32);
-              let topPosition = event.time * HOUR_HEIGHT_PX + offset * HOUR_HEIGHT_PX;
+              // Add 2px padding from top for better visual alignment
+              let topPosition = event.time * HOUR_HEIGHT_PX + offset * HOUR_HEIGHT_PX + 2;
 
               // If this is the dragged event, apply drag offset
               if (isDragging && draggedEvent?.id === event.id) {
@@ -166,9 +167,9 @@ export const CalendarGrid = ({
                   }`}
                   style={{
                     top: `${topPosition}px`,
-                    height: `${heightInPixels}px`,
-                    left: `calc(${leftPercent}% + 4px)`,
-                    width: `calc(${widthPercent}% - 8px)`
+                    height: `${heightInPixels - 4}px`,
+                    left: `calc(${leftPercent}% + 6px)`,
+                    width: `calc(${widthPercent}% - 12px)`
                   }}
                 >
                   <span className="line-clamp-3">{event.title}</span>
