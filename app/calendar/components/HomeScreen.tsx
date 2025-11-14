@@ -10,6 +10,8 @@ interface HomeScreenProps {
   onToggleEdit: () => void;
   onDeleteIndicator: (id: string) => void;
   onAddIndicator: () => void;
+  onLogout?: () => void;
+  inDemoMode?: boolean;
 }
 
 export const HomeScreen = ({
@@ -18,20 +20,35 @@ export const HomeScreen = ({
   onToggleEdit,
   onDeleteIndicator,
   onAddIndicator,
+  onLogout,
+  inDemoMode,
 }: HomeScreenProps) => {
   return (
     <div className="flex-1 overflow-y-auto p-4 bg-black">
       <div className="mb-4">
         <div className="flex items-center justify-between">
           <h2 className="text-lg font-medium text-white">Weekly Key Indicators</h2>
-          {indicators.length > 0 && (
-            <button
-              onClick={onToggleEdit}
-              className="text-pink-500 text-sm font-medium"
-            >
-              {isEditing ? 'Done' : 'Edit'}
-            </button>
-          )}
+          <div className="flex items-center gap-3">
+            {indicators.length > 0 && (
+              <button
+                onClick={onToggleEdit}
+                className="text-pink-500 text-sm font-medium"
+              >
+                {isEditing ? 'Done' : 'Edit'}
+              </button>
+            )}
+            {!inDemoMode && onLogout && (
+              <button
+                onClick={onLogout}
+                className="p-2 hover:bg-gray-800 rounded transition-colors"
+                title="Logout"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

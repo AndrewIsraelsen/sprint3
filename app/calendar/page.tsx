@@ -25,9 +25,11 @@ import { formatHeaderDate } from './lib/time-utils';
 import { Event } from './lib/types';
 import { isDemoMode, disableDemoMode } from './lib/demo-data';
 import { useRouter } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 
 export default function CalendarPage() {
   const router = useRouter();
+  const supabase = createClient();
 
   // ============================================================================
   // STATE MANAGEMENT
@@ -145,6 +147,22 @@ export default function CalendarPage() {
     router.push('/login');
   };
 
+  /**
+   * Handle user logout
+   */
+  const handleLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Error signing out:', error);
+      alert('Failed to sign out. Please try again.');
+    } else {
+      // Clear any demo mode settings
+      disableDemoMode();
+      document.cookie = 'demoMode=; path=/; max-age=0';
+      router.push('/login');
+    }
+  };
+
   // ============================================================================
   // RENDER
   // ============================================================================
@@ -194,21 +212,17 @@ export default function CalendarPage() {
           </button>
 
           <div className="flex items-center gap-2">
-            <button className="p-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z" />
-              </svg>
-            </button>
-            <button className="p-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
-              </svg>
-            </button>
-            <button className="p-2">
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
-              </svg>
-            </button>
+            {!inDemoMode && (
+              <button
+                onClick={handleLogout}
+                className="p-2 hover:bg-gray-800 rounded transition-colors"
+                title="Logout"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                </svg>
+              </button>
+            )}
           </div>
         </header>
       )}
@@ -221,6 +235,8 @@ export default function CalendarPage() {
           onToggleEdit={() => setIsEditingIndicators(!isEditingIndicators)}
           onDeleteIndicator={handleDeleteIndicator}
           onAddIndicator={() => setShowAddIndicatorModal(true)}
+          onLogout={handleLogout}
+          inDemoMode={inDemoMode}
         />
       )}
 
