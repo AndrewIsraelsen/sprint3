@@ -12,7 +12,7 @@ import { formatHeaderDate } from '../lib/time-utils';
 interface EventFormModalProps {
   isOpen: boolean;
   selectedDate: Date;
-  initialHour?: number; // For creating events at specific times
+  initialHour?: number; // For creating events at specific times (now represents 30-min slot index 0-47)
   editEvent?: Event | null; // For editing existing events
   onSave: (eventData: Partial<Event>) => Promise<boolean>;
   onClose: () => void;
@@ -61,9 +61,17 @@ export const EventFormModal = ({
         setStep('details');
       } else {
         // Creating new event - default to 30-minute duration
-        const hour = initialHour.toString().padStart(2, '0');
-        setStartTime(`${hour}:00`);
-        setEndTime(`${hour}:30`);
+        // initialHour now represents a 30-min slot index (0-47)
+        const totalMinutes = initialHour * 30;
+        const hour = Math.floor(totalMinutes / 60);
+        const minutes = totalMinutes % 60;
+
+        const endTotalMinutes = totalMinutes + 30; // Add 30 minutes
+        const endHour = Math.floor(endTotalMinutes / 60);
+        const endMinutes = endTotalMinutes % 60;
+
+        setStartTime(`${hour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`);
+        setEndTime(`${endHour.toString().padStart(2, '0')}:${endMinutes.toString().padStart(2, '0')}`);
       }
     }
   }, [isOpen, editEvent, initialHour]);

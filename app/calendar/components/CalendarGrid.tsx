@@ -3,9 +3,9 @@
  */
 
 import { Event } from '../lib/types';
-import { getHalfHourLabels } from '../lib/date-utils';
+import { getHourLabels } from '../lib/date-utils';
 import { calculateEventOffset } from '../lib/time-utils';
-import { SLOT_HEIGHT_PX, HOUR_HEIGHT_PX } from '../lib/constants';
+import { HOUR_HEIGHT_PX } from '../lib/constants';
 
 interface CalendarGridProps {
   selectedDate: Date;
@@ -93,7 +93,7 @@ export const CalendarGrid = ({
   onEventDragMove,
   onEventDragEnd,
 }: CalendarGridProps) => {
-  const timeSlots = getHalfHourLabels();
+  const hours = getHourLabels();
 
   // Filter events for selected date
   const dayEvents = events.filter(
@@ -106,26 +106,57 @@ export const CalendarGrid = ({
   return (
     <div className="flex-1 overflow-y-auto relative">
       <div className="flex">
-        {/* Time column */}
+        {/* Time column - hourly labels */}
         <div className="w-16 shrink-0 border-r border-gray-800">
-          {timeSlots.map((slot, index) => (
+          {hours.map((hour, index) => (
             <div key={index} className="h-16 text-xs text-gray-400 pr-2 pt-1 text-right">
-              {slot}
+              {hour}
             </div>
           ))}
         </div>
 
         {/* Days grid */}
         <div className="flex-1 relative">
-          {/* 30-minute time slots */}
-          <div className="absolute inset-0">
-            {timeSlots.map((slot, index) => (
-              <button
+          {/* Hour lines (visual grid) */}
+          <div className="absolute inset-0 pointer-events-none">
+            {hours.map((hour, index) => (
+              <div
                 key={index}
-                onClick={() => onSlotClick(index)}
-                className="w-full h-16 border-b border-gray-800 hover:bg-blue-900 hover:bg-opacity-30 transition-colors text-left relative block"
-                style={{ top: `${index * SLOT_HEIGHT_PX}px`, position: 'absolute' }}
+                className="w-full border-b border-gray-800"
+                style={{
+                  top: `${index * HOUR_HEIGHT_PX}px`,
+                  position: 'absolute',
+                  height: `${HOUR_HEIGHT_PX}px`
+                }}
               />
+            ))}
+          </div>
+
+          {/* 30-minute clickable slots (2 per hour) */}
+          <div className="absolute inset-0">
+            {hours.map((hour, hourIndex) => (
+              <div key={hourIndex}>
+                {/* First half (0-30 minutes) */}
+                <button
+                  onClick={() => onSlotClick(hourIndex * 2)}
+                  className="w-full hover:bg-blue-900 hover:bg-opacity-30 transition-colors text-left relative block"
+                  style={{
+                    top: `${hourIndex * HOUR_HEIGHT_PX}px`,
+                    position: 'absolute',
+                    height: '32px'
+                  }}
+                />
+                {/* Second half (30-60 minutes) */}
+                <button
+                  onClick={() => onSlotClick(hourIndex * 2 + 1)}
+                  className="w-full hover:bg-blue-900 hover:bg-opacity-30 transition-colors text-left relative block"
+                  style={{
+                    top: `${hourIndex * HOUR_HEIGHT_PX + 32}px`,
+                    position: 'absolute',
+                    height: '32px'
+                  }}
+                />
+              </div>
             ))}
           </div>
 

@@ -172,9 +172,9 @@ export default function CalendarPage() {
    * @param slotIndex - Index of 30-minute slot (0-47)
    */
   const handleSlotClick = (slotIndex: number) => {
-    // Convert slot index to hour (each hour has 2 slots)
-    const hour = Math.floor(slotIndex / 2);
-    setEventFormInitialHour(hour);
+    // slotIndex represents 30-minute intervals
+    // Pass the slot index directly to the form modal
+    setEventFormInitialHour(slotIndex);
     setSelectedEvent(null); // Clear selected event for creating new
     setShowEventFormModal(true);
   };
