@@ -17,6 +17,8 @@ import { DatePickerModal } from './components/DatePickerModal';
 import { AddIndicatorModal } from './components/AddIndicatorModal';
 import { EditIndicatorModal } from './components/EditIndicatorModal';
 import { IndicatorInfoModal } from './components/IndicatorInfoModal';
+import { EventFormModal } from './components/EventFormModal';
+import { EventSummaryModal } from './components/EventSummaryModal';
 import { CalendarGrid } from './components/CalendarGrid';
 import { WeekNavigation } from './components/WeekNavigation';
 import { useEvents } from './hooks/useEvents';
@@ -56,6 +58,8 @@ export default function CalendarPage() {
   const [showAddIndicatorModal, setShowAddIndicatorModal] = useState(false);
   const [showEditIndicatorModal, setShowEditIndicatorModal] = useState(false);
   const [showIndicatorInfoModal, setShowIndicatorInfoModal] = useState(false);
+  const [showEventFormModal, setShowEventFormModal] = useState(false);
+  const [showEventSummaryModal, setShowEventSummaryModal] = useState(false);
   const [showDatePicker, setShowDatePicker] = useState(false);
 
   // Indicator editing
@@ -64,6 +68,7 @@ export default function CalendarPage() {
 
   // Selected event for viewing/editing
   const [selectedEvent, setSelectedEvent] = useState<Event | null>(null);
+  const [eventFormInitialHour, setEventFormInitialHour] = useState(9);
 
   // Stripe checkout
   const [isProcessingCheckout, setIsProcessingCheckout] = useState(false);
@@ -166,16 +171,53 @@ export default function CalendarPage() {
    * Handle calendar slot click (create new event)
    */
   const handleSlotClick = (hourIndex: number) => {
-    // TODO: Implement event creation modal
-    console.log('Create event at hour:', hourIndex);
+    setEventFormInitialHour(hourIndex);
+    setSelectedEvent(null); // Clear selected event for creating new
+    setShowEventFormModal(true);
   };
 
   /**
-   * Handle event click (view/edit event)
+   * Handle event click (view event details)
    */
   const handleEventClick = (event: Event) => {
     setSelectedEvent(event);
-    // TODO: Show event summary modal
+    setShowEventSummaryModal(true);
+  };
+
+  /**
+   * Handle edit event from summary modal
+   */
+  const handleEditEvent = () => {
+    setShowEventSummaryModal(false);
+    setShowEventFormModal(true);
+  };
+
+  /**
+   * Handle save event (create or update)
+   */
+  const handleSaveEvent = async (eventData: Partial<Event>) => {
+    if (selectedEvent) {
+      // Update existing event
+      const success = await updateEvent(selectedEvent.id, eventData);
+      if (success) {
+        setSelectedEvent(null);
+      }
+      return success;
+    } else {
+      // Create new event
+      const success = await createEvent(eventData);
+      return success;
+    }
+  };
+
+  /**
+   * Handle delete event
+   */
+  const handleDeleteEvent = async () => {
+    if (selectedEvent) {
+      await deleteEvent(selectedEvent.id);
+      setSelectedEvent(null);
+    }
   };
 
   /**
@@ -388,7 +430,30 @@ export default function CalendarPage() {
         onClose={() => setShowDatePicker(false)}
       />
 
-      {/* TODO: EventFormModal, EventSummaryModal, TimePickerModal */}
+      <EventFormModal
+        isOpen={showEventFormModal}
+        selectedDate={selectedDate}
+        initialHour={eventFormInitialHour}
+        editEvent={selectedEvent}
+        onSave={handleSaveEvent}
+        onClose={() => {
+          setShowEventFormModal(false);
+          setSelectedEvent(null);
+        }}
+      />
+
+      {selectedEvent && (
+        <EventSummaryModal
+          event={selectedEvent}
+          isOpen={showEventSummaryModal}
+          onClose={() => {
+            setShowEventSummaryModal(false);
+            setSelectedEvent(null);
+          }}
+          onEdit={handleEditEvent}
+          onDelete={handleDeleteEvent}
+        />
+      )}
     </div>
   );
 }
