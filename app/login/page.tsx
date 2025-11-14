@@ -10,6 +10,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [message, setMessage] = useState<string | null>(null)
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
   const router = useRouter()
   const supabase = createClient()
 
@@ -40,6 +42,30 @@ export default function LoginPage() {
     router.push('/calendar')
   }
 
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setLoading(true)
+    setError(null)
+    setMessage(null)
+
+    if (!email) {
+      setError('Please enter your email address')
+      setLoading(false)
+      return
+    }
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${window.location.origin}/reset-password`,
+    })
+
+    if (error) {
+      setError(error.message)
+    } else {
+      setMessage('Password reset link sent! Check your email.')
+    }
+    setLoading(false)
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-black text-white">
       <div className="max-w-md w-full space-y-8 p-8 bg-gray-900 rounded-2xl border border-gray-800 shadow-lg">
@@ -51,10 +77,15 @@ export default function LoginPage() {
             Sign in to your account
           </p>
         </div>
-        <form className="mt-8 space-y-6" onSubmit={handleLogin}>
+        <form className="mt-8 space-y-6" onSubmit={showForgotPassword ? handleForgotPassword : handleLogin}>
           {error && (
             <div className="bg-red-900 border border-red-700 text-red-200 px-4 py-3 rounded-lg">
               {error}
+            </div>
+          )}
+          {message && (
+            <div className="bg-green-900 border border-green-700 text-green-200 px-4 py-3 rounded-lg">
+              {message}
             </div>
           )}
           <div className="space-y-4">
@@ -74,23 +105,37 @@ export default function LoginPage() {
                 placeholder="Email address"
               />
             </div>
-            <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
-                Password
-              </label>
-              <input
-                id="password"
-                name="password"
-                type="password"
-                autoComplete="current-password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="appearance-none relative block w-full px-4 py-3 bg-transparent border border-gray-700 rounded-lg placeholder-gray-500 text-white focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                placeholder="Password"
-              />
-            </div>
+            {!showForgotPassword && (
+              <div>
+                <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-2">
+                  Password
+                </label>
+                <input
+                  id="password"
+                  name="password"
+                  type="password"
+                  autoComplete="current-password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  className="appearance-none relative block w-full px-4 py-3 bg-transparent border border-gray-700 rounded-lg placeholder-gray-500 text-white focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
+                  placeholder="Password"
+                />
+              </div>
+            )}
           </div>
+
+          {!showForgotPassword && (
+            <div className="flex items-center justify-end">
+              <button
+                type="button"
+                onClick={() => setShowForgotPassword(true)}
+                className="text-sm text-pink-500 hover:text-pink-400 transition-colors"
+              >
+                Forgot password?
+              </button>
+            </div>
+          )}
 
           <div>
             <button
@@ -98,9 +143,25 @@ export default function LoginPage() {
               disabled={loading}
               className="w-full flex justify-center py-3 px-4 rounded-full text-base font-medium text-black bg-pink-500 hover:bg-pink-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-pink-500 disabled:opacity-50 transition-colors"
             >
-              {loading ? 'Signing in...' : 'Sign in'}
+              {loading ? (showForgotPassword ? 'Sending...' : 'Signing in...') : (showForgotPassword ? 'Send Reset Link' : 'Sign in')}
             </button>
           </div>
+
+          {showForgotPassword && (
+            <div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowForgotPassword(false)
+                  setError(null)
+                  setMessage(null)
+                }}
+                className="w-full text-center text-sm text-gray-400 hover:text-white transition-colors"
+              >
+                Back to sign in
+              </button>
+            </div>
+          )}
 
           <div className="relative">
             <div className="absolute inset-0 flex items-center">
