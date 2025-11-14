@@ -144,8 +144,12 @@ export default function CalendarPage() {
   /**
    * Handle adding new indicator
    */
-  const handleAddIndicator = async (eventType: string) => {
-    await createIndicator(eventType, 'time', 1);
+  const handleAddIndicator = async (
+    eventType: string,
+    measurementType: 'time' | 'frequency',
+    goalValue: number
+  ) => {
+    await createIndicator(eventType, measurementType, goalValue);
   };
 
   /**
