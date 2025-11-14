@@ -32,6 +32,14 @@ export default function LoginPage() {
     }
   }
 
+  const handleDemoMode = () => {
+    // Enable demo mode in localStorage and cookie
+    localStorage.setItem('demoMode', 'true')
+    // Set cookie for middleware
+    document.cookie = 'demoMode=true; path=/; max-age=86400' // 24 hours
+    router.push('/calendar')
+  }
+
   return (
     <div className="min-h-screen flex items-center justify-center bg-black text-white">
       <div className="max-w-md w-full space-y-8 p-8 bg-gray-900 rounded-2xl border border-gray-800 shadow-lg">
@@ -92,6 +100,28 @@ export default function LoginPage() {
             >
               {loading ? 'Signing in...' : 'Sign in'}
             </button>
+          </div>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <div className="w-full border-t border-gray-700"></div>
+            </div>
+            <div className="relative flex justify-center text-sm">
+              <span className="px-2 bg-gray-900 text-gray-400">OR</span>
+            </div>
+          </div>
+
+          <div>
+            <button
+              type="button"
+              onClick={handleDemoMode}
+              className="w-full flex justify-center py-3 px-4 rounded-full text-base font-medium text-white bg-gray-700 hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-500 transition-colors"
+            >
+              Try Demo Mode
+            </button>
+            <p className="text-center text-xs text-gray-500 mt-2">
+              Explore the app with pre-loaded sample data
+            </p>
           </div>
 
           <div className="text-center">

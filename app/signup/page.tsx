@@ -15,19 +15,50 @@ export default function SignupPage() {
   const router = useRouter()
   const supabase = createClient()
 
+  /**
+   * Sanitize input to prevent XSS attacks
+   */
+  const sanitizeInput = (input: string): string => {
+    return input
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;')
+      .replace(/'/g, '&#x27;')
+      .replace(/\//g, '&#x2F;')
+      .trim()
+  }
+
   const handleSignup = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
     setError(null)
     setMessage(null)
 
+    // Sanitize full name to prevent XSS
+    const sanitizedFullName = sanitizeInput(fullName)
+
+    // Validate input length
+    if (sanitizedFullName.length > 100) {
+      setError('Full name must be less than 100 characters')
+      setLoading(false)
+      return
+    }
+
+    if (sanitizedFullName.length < 2) {
+      setError('Full name must be at least 2 characters')
+      setLoading(false)
+      return
+    }
+
     const { error } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
-          full_name: fullName,
+          full_name: sanitizedFullName,
         },
+        // DISABLE email confirmation
+        emailRedirectTo: undefined,
       },
     })
 
@@ -35,9 +66,9 @@ export default function SignupPage() {
       setError(error.message)
       setLoading(false)
     } else {
-      setMessage('Account created successfully! Redirecting to sign in...')
+      setMessage('Account created successfully! You can now sign in.')
       setLoading(false)
-      // Redirect after a delay
+      // Redirect to login after delay
       setTimeout(() => router.push('/login'), 2000)
     }
   }
@@ -76,8 +107,10 @@ export default function SignupPage() {
                 required
                 value={fullName}
                 onChange={(e) => setFullName(e.target.value)}
+                maxLength={100}
+                minLength={2}
                 className="appearance-none relative block w-full px-4 py-3 bg-transparent border border-gray-700 rounded-lg placeholder-gray-500 text-white focus:outline-none focus:ring-2 focus:ring-pink-500 focus:border-transparent"
-                placeholder="Full name"
+                placeholder="Full name (2-100 characters)"
               />
             </div>
             <div>

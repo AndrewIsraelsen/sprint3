@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import { Indicator, Event } from '../lib/types';
 import { EVENT_TYPES } from '../lib/constants';
 import { getWeekStart, getWeekEnd } from '../lib/time-utils';
+import { generateDemoIndicators, isDemoMode } from '../lib/demo-data';
 
 export const useIndicators = (events: Event[]) => {
   const [indicators, setIndicators] = useState<Indicator[]>([]);
@@ -26,11 +27,17 @@ export const useIndicators = (events: Event[]) => {
   };
 
   /**
-   * Load indicators from API and calculate actual hours
+   * Load indicators from API and calculate actual hours, or use demo data
    */
   useEffect(() => {
     const loadIndicators = async () => {
       try {
+        // Check if in demo mode
+        if (isDemoMode()) {
+          setIndicators(generateDemoIndicators());
+          return;
+        }
+
         const response = await fetch('/api/key-indicators');
         if (!response.ok) return;
 

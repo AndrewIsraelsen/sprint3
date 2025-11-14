@@ -32,18 +32,30 @@ export async function middleware(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  // Protect routes that require authentication
-  if (!user && (request.nextUrl.pathname.startsWith('/dashboard') || request.nextUrl.pathname.startsWith('/calendar'))) {
+  // Check if in demo mode (allow calendar access without auth)
+  const demoMode = request.cookies.get('demoMode')?.value === 'true' ||
+                   request.headers.get('referer')?.includes('demoMode=true')
+
+  // Protect routes that require authentication (unless in demo mode)
+  if (!demoMode && !user && (request.nextUrl.pathname.startsWith('/dashboard') || request.nextUrl.pathname.startsWith('/calendar'))) {
     const url = request.nextUrl.clone()
     url.pathname = '/login'
     return NextResponse.redirect(url)
   }
 
-  // Redirect authenticated users away from auth pages
-  if (user && (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup')) {
+  // Redirect authenticated users away from auth pages (but allow demo mode)
+  if (!demoMode && user && (request.nextUrl.pathname === '/login' || request.nextUrl.pathname === '/signup')){
     const url = request.nextUrl.clone()
     url.pathname = '/calendar'
     return NextResponse.redirect(url)
+  }
+
+  // Set demo mode cookie if accessing from login with demo mode
+  if (demoMode && !request.cookies.get('demoMode')) {
+    supabaseResponse.cookies.set('demoMode', 'true', {
+      maxAge: 60 * 60 * 24, // 24 hours
+      path: '/',
+    })
   }
 
   return supabaseResponse

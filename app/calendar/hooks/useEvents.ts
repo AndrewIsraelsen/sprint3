@@ -11,17 +11,25 @@ import {
   parseTimeToHour,
   calculateEventDuration
 } from '../lib/time-utils';
+import { generateDemoEvents, isDemoMode } from '../lib/demo-data';
 
 export const useEvents = () => {
   const [events, setEvents] = useState<Event[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   /**
-   * Load events from API on mount
+   * Load events from API on mount, or use demo data if in demo mode
    */
   useEffect(() => {
     const loadEvents = async () => {
       try {
+        // Check if in demo mode
+        if (isDemoMode()) {
+          setEvents(generateDemoEvents());
+          setIsLoading(false);
+          return;
+        }
+
         const response = await fetch('/api/calendar/events');
         if (!response.ok) return;
 
