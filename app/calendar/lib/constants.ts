@@ -45,8 +45,9 @@ export const STRIPE_PRICE_IDS = {
   premium: 'price_1SM0BhJwLJFduW01Sau5RPKC',
 };
 
-/** Height of each hour slot in pixels */
-export const HOUR_HEIGHT_PX = 64;
+/** Height of each hour slot in pixels (now represents 30-minute slots) */
+export const SLOT_HEIGHT_PX = 64; // 30 minutes per slot
+export const HOUR_HEIGHT_PX = 128; // 1 hour = 2 slots × 64px
 
 /** Drag scroll threshold in pixels from edge */
 export const DRAG_SCROLL_THRESHOLD = 100;

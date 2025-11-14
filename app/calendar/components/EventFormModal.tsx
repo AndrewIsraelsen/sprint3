@@ -60,11 +60,10 @@ export const EventFormModal = ({
         setAddress(editEvent.address || '');
         setStep('details');
       } else {
-        // Creating new event
+        // Creating new event - default to 30-minute duration
         const hour = initialHour.toString().padStart(2, '0');
-        const nextHour = ((initialHour + 1) % 24).toString().padStart(2, '0');
         setStartTime(`${hour}:00`);
-        setEndTime(`${nextHour}:00`);
+        setEndTime(`${hour}:30`);
       }
     }
   }, [isOpen, editEvent, initialHour]);

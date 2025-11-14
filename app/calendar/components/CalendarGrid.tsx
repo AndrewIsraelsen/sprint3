@@ -3,9 +3,9 @@
  */
 
 import { Event } from '../lib/types';
-import { getHourLabels } from '../lib/date-utils';
+import { getHalfHourLabels } from '../lib/date-utils';
 import { calculateEventOffset } from '../lib/time-utils';
-import { HOUR_HEIGHT_PX } from '../lib/constants';
+import { SLOT_HEIGHT_PX, HOUR_HEIGHT_PX } from '../lib/constants';
 
 interface CalendarGridProps {
   selectedDate: Date;
@@ -93,7 +93,7 @@ export const CalendarGrid = ({
   onEventDragMove,
   onEventDragEnd,
 }: CalendarGridProps) => {
-  const hours = getHourLabels();
+  const timeSlots = getHalfHourLabels();
 
   // Filter events for selected date
   const dayEvents = events.filter(
@@ -108,23 +108,23 @@ export const CalendarGrid = ({
       <div className="flex">
         {/* Time column */}
         <div className="w-16 shrink-0 border-r border-gray-800">
-          {hours.map((hour, index) => (
+          {timeSlots.map((slot, index) => (
             <div key={index} className="h-16 text-xs text-gray-400 pr-2 pt-1 text-right">
-              {hour}
+              {slot}
             </div>
           ))}
         </div>
 
         {/* Days grid */}
         <div className="flex-1 relative">
-          {/* Hour slots */}
+          {/* 30-minute time slots */}
           <div className="absolute inset-0">
-            {hours.map((hour, index) => (
+            {timeSlots.map((slot, index) => (
               <button
                 key={index}
                 onClick={() => onSlotClick(index)}
                 className="w-full h-16 border-b border-gray-800 hover:bg-blue-900 hover:bg-opacity-30 transition-colors text-left relative block"
-                style={{ top: `${index * 64}px`, position: 'absolute' }}
+                style={{ top: `${index * SLOT_HEIGHT_PX}px`, position: 'absolute' }}
               />
             ))}
           </div>

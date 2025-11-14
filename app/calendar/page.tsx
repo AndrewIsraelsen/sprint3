@@ -169,9 +169,12 @@ export default function CalendarPage() {
 
   /**
    * Handle calendar slot click (create new event)
+   * @param slotIndex - Index of 30-minute slot (0-47)
    */
-  const handleSlotClick = (hourIndex: number) => {
-    setEventFormInitialHour(hourIndex);
+  const handleSlotClick = (slotIndex: number) => {
+    // Convert slot index to hour (each hour has 2 slots)
+    const hour = Math.floor(slotIndex / 2);
+    setEventFormInitialHour(hour);
     setSelectedEvent(null); // Clear selected event for creating new
     setShowEventFormModal(true);
   };

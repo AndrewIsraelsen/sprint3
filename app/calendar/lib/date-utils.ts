@@ -75,3 +75,21 @@ export const getHourLabels = (): string[] => {
     return `${displayHour} ${period}`;
   });
 };
+
+/**
+ * Generates array of 30-minute time slot labels for the day
+ * @returns Array of time slot strings (e.g., "12:00 AM", "12:30 AM", "1:00 PM")
+ */
+export const getHalfHourLabels = (): string[] => {
+  const labels: string[] = [];
+  for (let hour = 0; hour < 24; hour++) {
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const displayHour = hour === 0 ? 12 : hour > 12 ? hour - 12 : hour;
+
+    // Add the :00 slot
+    labels.push(`${displayHour}:00 ${period}`);
+    // Add the :30 slot
+    labels.push(`${displayHour}:30 ${period}`);
+  }
+  return labels;
+};
